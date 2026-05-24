@@ -1489,8 +1489,37 @@ if ('serviceWorker' in navigator) {
   display:none; position:fixed; inset:0; z-index:10000;
   background:var(--card);
   overflow-y:scroll; -webkit-overflow-scrolling:touch;
-  padding:20px;
+  padding:20px 20px 80px;
 ">
+  <!-- Botões de scroll fixos -->
+  <button onclick="document.getElementById('modal-admin').scrollBy({top:-200,behavior:'smooth'})" style="
+    position:fixed; bottom:70px; right:16px; z-index:10001;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:var(--acento); color:white; font-size:1.3rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); cursor:pointer;
+    display:none; align-items:center; justify-content:center;
+  " id="btn-scroll-up">▲</button>
+  <button onclick="document.getElementById('modal-admin').scrollBy({top:200,behavior:'smooth'})" style="
+    position:fixed; bottom:20px; right:16px; z-index:10001;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:var(--acento); color:white; font-size:1.3rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); cursor:pointer;
+    display:none; align-items:center; justify-content:center;
+  " id="btn-scroll-down">▼</button>
+  <button onclick="document.getElementById('modal-admin').scrollBy({left:-200,behavior:'smooth'})" style="
+    position:fixed; bottom:20px; left:16px; z-index:10001;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:var(--acento); color:white; font-size:1.3rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); cursor:pointer;
+    display:none; align-items:center; justify-content:center;
+  " id="btn-scroll-left">◄</button>
+  <button onclick="document.getElementById('modal-admin').scrollBy({left:200,behavior:'smooth'})" style="
+    position:fixed; bottom:70px; left:16px; z-index:10001;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:var(--acento); color:white; font-size:1.3rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); cursor:pointer;
+    display:none; align-items:center; justify-content:center;
+  " id="btn-scroll-right">►</button>
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
       <h3 style="font-family:'Fraunces',serif; font-size:1.3rem; color:var(--acento); margin:0;">🔐 Perfil do Proprietário</h3>
       <button onclick="fecharPainelAdmin()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--texto-leve);">✕</button>
@@ -1644,17 +1673,26 @@ if ('serviceWorker' in navigator) {
 let appBloqueado = false;
 
 function abrirPainelAdmin() {
-  document.getElementById('modal-admin').style.display = 'flex';
+  const modal = document.getElementById('modal-admin');
+  modal.style.display = 'block';
   document.getElementById('admin-senha').value = '';
   document.getElementById('admin-erro').style.display = 'none';
   document.getElementById('admin-conteudo').style.display = 'none';
   document.getElementById('admin-senha-section').style.display = 'block';
   document.body.style.overflow = 'hidden';
+  document.getElementById('btn-scroll-up').style.display = 'flex';
+  document.getElementById('btn-scroll-down').style.display = 'flex';
+  document.getElementById('btn-scroll-left').style.display = 'flex';
+  document.getElementById('btn-scroll-right').style.display = 'flex';
   setTimeout(() => document.getElementById('admin-senha').focus(), 100);
 }
 
 function fecharPainelAdmin() {
   document.getElementById('modal-admin').style.display = 'none';
+  document.getElementById('btn-scroll-up').style.display = 'none';
+  document.getElementById('btn-scroll-down').style.display = 'none';
+  document.getElementById('btn-scroll-left').style.display = 'none';
+  document.getElementById('btn-scroll-right').style.display = 'none';
   document.body.style.overflow = '';
 }
 
