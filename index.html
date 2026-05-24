@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário Escolar 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cal. SEDUC">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   TEMAS DE COR
+══════════════════════════════════════════ */
+[data-tema="claro"] {
+  --bg:        #f4f1eb;
+  --card:      #fffdf7;
+  --borda:     #d4cfc0;
+  --texto:     #1c1a14;
+  --texto-leve:#6b6555;
+  --header-bg: #1a6b3c;
+  --nav-bg:    #2244aa;
+  --acento:    #2244aa;
+  --acento2:   #6d28d9;
+  --hover-borda:#2244aa;
+}
+[data-tema="escuro"] {
+  --bg:        #111218;
+  --card:      #1e1f2b;
+  --borda:     #2e3044;
+  --texto:     #e8e6f0;
+  --texto-leve:#9592aa;
+  --header-bg: #0f1623;
+  --nav-bg:    #161e3a;
+  --acento:    #4d7fff;
+  --acento2:   #a78bfa;
+  --hover-borda:#4d7fff;
+}
+[data-tema="azul"] {
+  --bg:        #e8eef8;
+  --card:      #f0f4fc;
+  --borda:     #bacaed;
+  --texto:     #0d1a3a;
+  --texto-leve:#3a5080;
+  --header-bg: #1a3080;
+  --nav-bg:    #2244aa;
+  --acento:    #2244aa;
+  --acento2:   #1a3080;
+  --hover-borda:#1a3080;
+}
+[data-tema="rosa"] {
+  --bg:        #fdf0f5;
+  --card:      #fff5f9;
+  --borda:     #f5c0d8;
+  --texto:     #3a0a20;
+  --texto-leve:#8a4060;
+  --header-bg: #9b2257;
+  --nav-bg:    #c2185b;
+  --acento:    #c2185b;
+  --acento2:   #7b1fa2;
+  --hover-borda:#c2185b;
+}
+
+/* ══════════════════════════════════════════
+   BASE
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; overflow-x: hidden; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg); color: var(--texto);
+  min-height: 100vh; transition: background 0.3s, color 0.3s;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--header-bg); color: white;
+  padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 3px 16px rgba(0,0,0,0.25);
+  gap: 8px; flex-wrap: wrap;
+}
+header h1 { font-family:'Fraunces',serif; font-size:1.3rem; white-space:nowrap; }
+header .sub { font-size:.72rem; opacity:.75; margin-top:1px; }
+.header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+.toggle-view { display:flex; background:rgba(255,255,255,.15); border-radius:9px; padding:3px; gap:2px; }
+.toggle-view button { background:none; border:none; color:rgba(255,255,255,.75); padding:6px 12px; border-radius:6px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8rem; font-weight:600; transition:all .2s; }
+.toggle-view button.ativo { background:white; color:var(--header-bg); }
+
+.online-badge { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.12); border-radius:20px; padding:5px 12px; font-size:.75rem; font-weight:600; }
+.dot-live { width:8px; height:8px; border-radius:50%; background:#f5c842; animation:pulsar 1.4s infinite; flex-shrink:0; }
+@keyframes pulsar { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.5)} }
+
+/* Seletor de tema */
+.tema-wrap { display:flex; align-items:center; gap:5px; }
+.tema-wrap span { font-size:.7rem; color:rgba(255,255,255,.7); white-space:nowrap; }
+.tema-btn {
+  width:22px; height:22px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4);
+  cursor:pointer; transition:transform .15s, border-color .15s; flex-shrink:0;
+}
+.tema-btn:hover, .tema-btn.ativo { border-color:white; transform:scale(1.18); }
+.tema-btn[data-t="claro"]  { background:#f5f0e8; }
+.tema-btn[data-t="escuro"] { background:#1e1f2b; }
+.tema-btn[data-t="azul"]   { background:#2244aa; }
+.tema-btn[data-t="rosa"]   { background:#c2185b; }
+
+/* ── TARJA DO MÊS ── */
+.nav-periodo {
+  background: var(--nav-bg);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 18px; box-shadow:0 4px 14px rgba(0,0,0,.2);
+}
+.nav-periodo button { background:rgba(255,255,255,.18); border:none; border-radius:8px; width:38px; height:38px; cursor:pointer; font-size:1.3rem; color:white; transition:background .18s; }
+.nav-periodo button:hover { background:rgba(255,255,255,.32); }
+.nav-periodo h2 { font-family:'Fraunces',serif; font-size:1.55rem; font-weight:900; color:white; text-transform:uppercase; letter-spacing:2px; text-align:center; flex:1; text-shadow:0 2px 8px rgba(0,0,0,.2); }
+
+/* ── WRAPPER ── */
+.cal-wrap { width:100%; padding:0 10px 20px; overflow-x:hidden; }
+
+/* ── DIAS DA SEMANA ── */
+.dias-semana { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:8px 1px 4px; }
+.dias-semana div { text-align:center; font-size:.78rem; font-weight:700; color:var(--texto-leve); text-transform:uppercase; letter-spacing:.7px; padding:4px 0; }
+.dias-semana div:first-child, .dias-semana div:last-child { color:#c0392b; }
+
+/* ── GRADE MENSAL ── */
+.grade { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+
+.dia {
+  background:var(--card); border:1.5px solid var(--borda);
+  border-radius:10px; min-height:110px;
+  padding:8px 8px 6px; cursor:pointer;
+  transition:border-color .18s, box-shadow .18s, transform .15s;
+  display:flex; flex-direction:column; align-items:center;
+  gap:5px; position:relative; overflow:hidden;
+}
+.dia:hover { border-color:var(--hover-borda); box-shadow:0 3px 14px rgba(0,0,0,.12); transform:translateY(-2px); }
+.dia.vazio { background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
+.dia.selecionado { border-color:var(--acento); box-shadow:0 0 0 3px rgba(var(--acento),.2); }
+
+.num-dia { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900; color:var(--acento); line-height:1; position:relative; }
+
+/* Hoje — tarja vermelha */
+.dia.hoje { border-color:#c0392b; box-shadow:0 0 0 2.5px rgba(192,57,43,.3); }
+.dia.hoje .num-dia {
+  background:#c0392b; color:white;
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+}
+.dia.fim-semana .num-dia { color:#c0392b; }
+
+/* Feriado nacional — círculo apenas contornado no número */
+.dia.feriado-nac .num-dia {
+  background: transparent; color:#c0392b;
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  border: 2.5px solid #c0392b;
+}
+.dia.feriado-nac { background: rgba(192,57,43,.05); }
+
+/* Ícones dos eventos */
+.icones-dia { display:flex; flex-wrap:wrap; justify-content:center; gap:3px; width:100%; }
+.icone-dia { font-size:1.3rem; line-height:1; transition:transform .15s; }
+.dia:hover .icone-dia { transform:scale(1.18); }
+
+/* Badge de contagem */
+.badge-ev {
+  position:absolute; bottom:5px; right:6px;
+  background:var(--acento); color:white;
+  font-size:.58rem; font-weight:800;
+  min-width:16px; height:16px; border-radius:8px; padding:0 3px;
+  display:flex; align-items:center; justify-content:center;
+}
+
+.add-hint { font-size:.63rem; color:var(--borda); text-align:center; margin-top:auto; transition:color .18s; }
+.dia:hover .add-hint { color:var(--acento); }
+
+/* ── PAINEL DO DIA ── */
+.painel-acima { display:none; border-radius:16px; overflow:hidden; box-shadow:0 12px 48px rgba(0,0,0,.18); margin:0 0 14px; }
+.painel-acima.aberto { display:block; animation:slideDown .28s cubic-bezier(.22,1,.36,1); }
+@keyframes slideDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+
+.painel-topo {
+  background:linear-gradient(135deg, var(--acento) 0%, var(--acento2) 100%);
+  color:white; padding:16px 22px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.painel-topo-esq { display:flex; align-items:center; gap:16px; }
+.painel-num-grande { font-family:'Fraunces',serif; font-size:3.2rem; font-weight:900; line-height:1; text-shadow:0 2px 12px rgba(0,0,0,.2); }
+.painel-info-dia h2 { font-family:'Fraunces',serif; font-size:1.3rem; text-transform:capitalize; }
+.painel-info-dia span { font-size:.8rem; opacity:.85; }
+.btn-fechar-painel { background:rgba(255,255,255,.18); border:1.5px solid rgba(255,255,255,.3); color:white; padding:8px 20px; border-radius:30px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; display:flex; align-items:center; gap:6px; transition:background .18s, transform .15s; white-space:nowrap; }
+.btn-fechar-painel:hover { background:rgba(255,255,255,.3); transform:scale(1.04); }
+
+.painel-corpo { display:flex; flex-direction:row; overflow:hidden; max-height:400px; }
+
+.painel-eventos { flex:1; padding:20px; overflow-x:auto; overflow-y:hidden; display:flex; flex-direction:column; gap:12px; background:var(--card); }
+.painel-eventos-titulo { font-family:'Fraunces',serif; font-size:1.05rem; color:var(--acento); font-weight:700; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+.grid-eventos { display:flex; flex-direction:row; gap:14px; align-items:stretch; flex:1; overflow-x:auto; padding-bottom:6px; }
+.grid-eventos::-webkit-scrollbar { height:5px; }
+.grid-eventos::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
+
+.card-evento { border-radius:14px; display:flex; flex-direction:column; min-width:200px; max-width:240px; flex-shrink:0; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.13); transition:box-shadow .2s, transform .15s; position:relative; }
+.card-evento:hover { box-shadow:0 10px 30px rgba(0,0,0,.2); transform:translateY(-5px); }
+.card-topo { padding:16px 16px 10px; display:flex; flex-direction:column; gap:7px; flex:1; }
+.card-icone { font-size:2rem; line-height:1; }
+.card-titulo { font-size:.93rem; font-weight:800; line-height:1.38; color:white; text-shadow:0 1px 4px rgba(0,0,0,.22); padding-right:24px; }
+.card-rodape { padding:8px 14px; background:rgba(0,0,0,.18); display:flex; gap:10px; flex-wrap:wrap; }
+.card-meta-item { font-size:.75rem; color:rgba(255,255,255,.92); display:flex; align-items:center; gap:3px; }
+.card-del { position:absolute; top:8px; right:8px; background:rgba(255,255,255,.2); border:none; color:white; width:24px; height:24px; border-radius:6px; cursor:pointer; font-size:.78rem; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s, background .15s; }
+.card-evento:hover .card-del { opacity:1; }
+.card-del:hover { background:rgba(255,255,255,.4); }
+
+.vazio-painel { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:10px; min-width:240px; opacity:.4; }
+.vazio-painel .icone { font-size:2.8rem; }
+.vazio-painel p { font-size:.88rem; color:var(--texto-leve); text-align:center; }
+
+.painel-form { width:290px; min-width:250px; flex-shrink:0; background:var(--bg); border-left:2px solid var(--borda); padding:18px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+.painel-form h3 { font-family:'Fraunces',serif; font-size:1rem; color:var(--acento); }
+.form-grupo label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--texto-leve); margin-bottom:5px; }
+.form-grupo input { width:100%; padding:9px 11px; border:1.5px solid var(--borda); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.9rem; color:var(--texto); background:var(--card); outline:none; transition:border-color .18s; }
+.form-grupo input:focus { border-color:var(--acento); box-shadow:0 0 0 3px rgba(34,68,170,.1); }
+.cores-picker { display:flex; gap:7px; flex-wrap:wrap; }
+.cor-opcao { width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform .15s, border-color .15s; }
+.cor-opcao:hover { transform:scale(1.15); }
+.cor-opcao.selecionada { border-color:var(--texto); transform:scale(1.1); }
+.btn-add { width:100%; padding:11px; background:linear-gradient(135deg, var(--acento), var(--acento2)); color:white; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.92rem; font-weight:700; cursor:pointer; transition:opacity .18s, transform .1s; box-shadow:0 3px 14px rgba(0,0,0,.15); }
+.btn-add:hover { opacity:.88; }
+.btn-add:active { transform:scale(.98); }
+
+/* ══════════════════════════════════════════
+   LISTA DIÁRIA ABAIXO DO CALENDÁRIO
+══════════════════════════════════════════ */
+.lista-mensal {
+  margin: 18px 0 0;
+  background: var(--card);
+  border-radius: 14px;
+  border: 1.5px solid var(--borda);
+  overflow: hidden;
+}
+.lista-mensal-titulo {
+  padding: 14px 20px;
+  font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 900;
+  color: white;
+  background: linear-gradient(135deg, var(--acento), var(--acento2));
+  display: flex; align-items: center; gap: 8px;
+}
+
+.lista-dia-row {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid var(--borda);
+  cursor: pointer; transition: background .15s;
+  min-height: 46px;
+}
+.lista-dia-row:last-child { border-bottom: none; }
+.lista-dia-row:hover { background: rgba(0,0,0,.03); }
+
+/* Destaque dia atual — tarja vermelha */
+.lista-dia-row.lista-hoje {
+  background: linear-gradient(90deg, rgba(192,57,43,.12) 0%, transparent 100%);
+  border-left: 4px solid #c0392b;
+}
+.lista-dia-row.lista-hoje .lista-num { color: #c0392b; font-weight: 900; }
+
+.lista-num {
+  min-width: 52px; padding: 12px 8px;
+  text-align: center;
+  font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 900;
+  color: var(--acento);
+  border-right: 1px solid var(--borda);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  flex-shrink: 0;
+}
+.lista-diasem { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--texto-leve); }
+
+.lista-conteudo {
+  flex: 1; padding: 10px 16px;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+}
+.lista-ev-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: .85rem; font-weight: 600; line-height: 1.3;
+}
+.lista-ev-item .ev-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.lista-vazio { font-size: .8rem; color: var(--texto-leve); font-style: italic; }
+
+/* Indicadores de feriado/homenagem na lista */
+.lista-badge {
+  font-size: .65rem; padding: 2px 6px; border-radius: 10px;
+  font-weight: 700; white-space: nowrap; flex-shrink: 0;
+}
+.lista-badge.feriado { background: #c0392b22; color: #c0392b; border: 1px solid #c0392b55; }
+
+/* ── SEMANAL ── */
+.grade-semana { display:flex; flex-direction:column; gap:6px; }
+.dia-sem-col {
+  background:var(--card); border:1.5px solid var(--borda); border-radius:10px;
+  display:flex; flex-direction:row; align-items:stretch;
+  cursor:pointer; transition:border-color .18s, box-shadow .18s; overflow:hidden;
+  min-height:64px;
+}
+.dia-sem-col:hover { border-color:var(--hover-borda); box-shadow:0 2px 10px rgba(0,0,0,.1); }
+.dia-sem-col.hoje-sem {
+  border-color:#5ba3d9;
+  box-shadow:0 0 0 2px rgba(91,163,217,.35);
+  background: linear-gradient(90deg, rgba(173,216,230,.35) 0%, var(--card) 100%);
+}
+.dia-sem-col.feriado-sem { background:rgba(192,57,43,.04); }
+.sem-hdr {
+  min-width:80px; width:80px; flex-shrink:0;
+  padding:10px 8px; border-right:1px solid var(--borda);
+  text-align:center; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px;
+}
+.dia-sem-col.hoje-sem .sem-hdr {
+  background: rgba(91,163,217,.18);
+}
+.sem-nome { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--texto-leve); }
+.sem-num { font-family:'Fraunces',serif; font-size:2rem; font-weight:900; color:var(--acento); line-height:1; }
+.dia-sem-col.hoje-sem .sem-num {
+  background:#5ba3d9; color:white;
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; margin:0 auto;
+}
+.dia-sem-col.fim-sem .sem-num { color:#c0392b; }
+.dia-sem-col.fim-sem .sem-nome { color:#c0392b; }
+.sem-evs { flex:1; padding:8px 12px; display:flex; flex-direction:column; gap:5px; justify-content:center; }
+.sem-chip { font-size:.82rem; font-weight:600; padding:5px 9px; border-radius:6px; line-height:1.35; word-break:break-word; display:flex; align-items:flex-start; justify-content:space-between; gap:3px; }
+.sem-chip .del-btn { background:none; border:none; cursor:pointer; font-size:.9rem; opacity:0; color:inherit; padding:0; flex-shrink:0; }
+.dia-sem-col:hover .del-btn { opacity:.55; }
+.sem-hora { font-size:.72rem; opacity:.75; font-weight:400; display:block; margin-top:2px; }
+.sem-add { padding:4px 12px 8px; text-align:left; font-size:.75rem; color:var(--borda); transition:color .18s; }
+.dia-sem-col:hover .sem-add { color:var(--acento); }
+
+/* ── PAGAMENTO — círculo dourado ── */
+.dia.pagamento .num-dia {
+  background: linear-gradient(135deg, #c8960c 0%, #f5c842 50%, #c8960c 100%);
+  color: #3a2800;
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  box-shadow: 0 2px 8px rgba(200,150,12,.5);
+}
+.dia.pagamento { background: rgba(245,200,66,.08); border-color: #c8960c55; }
+.pagamento-hint {
+  font-size:.52rem; font-weight:900; color:#c8960c; text-align:center;
+  text-transform:uppercase; letter-spacing:.2px; margin-top:auto;
+  white-space:nowrap; line-height:1.3; width:100%;
+}
+.lista-badge.pagamento { background:#f5c84222; color:#9a6f00; border:1px solid #c8960c88; font-weight:800; }
+
+/* ── CALENDÁRIO SEDUC ── */
+.seduc-wrap {
+  margin: 24px 0 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.15);
+  border: 2px solid #3d6b28;
+}
+.seduc-header {
+  background: linear-gradient(135deg, #3d6b28 0%, #5a9a3a 100%);
+  padding: 18px 24px 14px;
+  text-align: center;
+}
+.seduc-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem; font-weight: 900;
+  color: #b8f060;
+  text-shadow: 0 2px 8px rgba(0,0,0,.3);
+  letter-spacing: 2px;
+}
+.seduc-header p {
+  color: white; font-size: .82rem; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-top: 2px; opacity: .9;
+}
+.seduc-table {
+  width: 100%; border-collapse: collapse;
+  background: var(--card);
+}
+.seduc-table thead tr { background: #3d6b28; }
+.seduc-table thead th {
+  padding: 10px 16px; color: white;
+  font-size: .8rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1px; text-align: center;
+}
+.seduc-table thead th:first-child { text-align: left; }
+.seduc-table tbody tr { border-bottom: 1px solid var(--borda); transition: background .15s; }
+.seduc-table tbody tr:last-child { border-bottom: none; }
+.seduc-table tbody tr:hover { background: rgba(93,165,42,.07); }
+.seduc-table tbody tr.mes-atual-seduc { background: rgba(245,200,66,.15); }
+.seduc-table td {
+  padding: 11px 16px; font-size: .9rem; text-align: center;
+  vertical-align: middle;
+}
+.seduc-table td:first-child {
+  text-align: left; font-weight: 800; font-size: .88rem;
+  color: var(--texto); text-transform: uppercase; letter-spacing: .5px;
+}
+.seduc-dia-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-weight: 900; font-size: 1rem;
+}
+.seduc-g12 .seduc-dia-badge {
+  background: linear-gradient(135deg, #c8960c, #f5c842);
+  color: #3a2800;
+  box-shadow: 0 2px 6px rgba(200,150,12,.4);
+}
+.seduc-g3 .seduc-dia-badge {
+  background: linear-gradient(135deg, #2244aa, #4d7fff);
+  color: white;
+  box-shadow: 0 2px 6px rgba(34,68,170,.3);
+}
+.seduc-legenda {
+  background: linear-gradient(135deg, #3d6b28, #5a9a3a);
+  padding: 12px 20px;
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.seduc-legenda-item {
+  font-size: .72rem; color: white; font-weight: 600;
+  background: rgba(255,255,255,.15); border-radius: 20px;
+  padding: 4px 10px;
+}
+.seduc-table tbody tr.mes-atual-seduc td:first-child::after {
+  content: ' ◀';
+  color: #c8960c;
+  font-size: .75rem;
+}
+
+.dia-sem-col.pagamento-sem { border-color:#c8960c88; background: rgba(245,200,66,.06); }
+
+/* ── BIMESTRE — contorno verde ── */
+.dia.bimestre { border-color: #1a9a3c !important; border-width: 2.5px !important; box-shadow: 0 0 0 2px rgba(26,154,60,.18); }
+.dia.bimestre .num-dia { color: #1a9a3c; }
+.bimestre-hint {
+  font-size:.58rem; font-weight:900; color:#1a9a3c; text-align:center;
+  text-transform:uppercase; letter-spacing:.4px; margin-top:auto;
+  line-height:1.2;
+}
+
+/* ── AVALIAÇÃO — contorno verde tracejado ── */
+.dia.avaliacao { border-color: #1a9a3c !important; border-width: 2px !important; border-style: dashed !important; background: rgba(26,154,60,.04); }
+.dia.avaliacao .num-dia { color: #1a9a3c; }
+.avaliacao-hint {
+  font-size:.58rem; font-weight:900; color:#1a9a3c; text-align:center;
+  text-transform:uppercase; letter-spacing:.4px; margin-top:auto; line-height:1.2;
+}
+
+/* ══════════════════════════════════════════
+   TABELAS BIMESTRE / AVALIAÇÕES
+══════════════════════════════════════════ */
+.bim-section {
+  margin: 20px 0 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.15);
+  border: 2.5px solid #1a9a3c;
+}
+.bim-header {
+  background: linear-gradient(135deg, #1a6b3c 0%, #2db34a 100%);
+  padding: 16px 24px 12px;
+  text-align: center;
+}
+.bim-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem; font-weight: 900;
+  color: #b8f060;
+  text-shadow: 0 2px 8px rgba(0,0,0,.3);
+  letter-spacing: 2px;
+}
+.bim-header p {
+  color: white; font-size: .8rem; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-top: 2px; opacity: .9;
+}
+.bim-table {
+  width: 100%; border-collapse: collapse;
+  background: var(--card);
+}
+.bim-table thead tr { background: #1a6b3c; }
+.bim-table thead th {
+  padding: 10px 16px; color: white;
+  font-size: .78rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1px; text-align: center;
+}
+.bim-table thead th:first-child { text-align: left; }
+.bim-table tbody tr { border-bottom: 1px solid var(--borda); transition: background .15s; }
+.bim-table tbody tr:last-child { border-bottom: none; }
+.bim-table tbody tr:hover { background: rgba(26,154,60,.07); }
+.bim-table td {
+  padding: 13px 16px; font-size: .9rem; text-align: center;
+  vertical-align: middle;
+}
+.bim-table td:first-child {
+  text-align: left; font-weight: 800; font-size: .88rem;
+  color: var(--texto); text-transform: uppercase; letter-spacing: .5px;
+}
+.bim-periodo {
+  display: inline-block;
+  background: rgba(26,154,60,.12);
+  color: #1a6b3c;
+  border: 1.5px solid #2db34a;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: .82rem; font-weight: 700;
+  white-space: nowrap;
+}
+.bim-dias {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #1a6b3c, #2db34a);
+  color: white; font-weight: 900; font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(26,107,60,.4);
+}
+.bim-legenda {
+  background: linear-gradient(135deg, #1a6b3c, #2db34a);
+  padding: 12px 20px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.bim-legenda-item {
+  font-size: .72rem; color: white; font-weight: 600;
+  background: rgba(255,255,255,.15); border-radius: 20px;
+  padding: 4px 10px;
+}
+.bim-current { background: rgba(26,154,60,.12) !important; }
+.bim-current td:first-child::after { content: ' ◀'; color: #2db34a; font-size: .75rem; }
+
+/* AVALIAÇÃO TABLE */
+.av-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 76px; padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 800; font-size: .78rem;
+  white-space: nowrap;
+}
+.av-av1 { background: rgba(26,154,60,.15); color: #1a6b3c; border: 1.5px solid #2db34a; }
+.av-av2 { background: rgba(26,154,60,.28); color: #1a5b30; border: 1.5px solid #1a9a3c; }
+.av-av3 { background: linear-gradient(135deg, #1a6b3c, #2db34a); color: white; border: none; box-shadow: 0 2px 6px rgba(26,107,60,.35); }
+.dia-sem-col.pagamento-sem .sem-hdr { background: rgba(245,200,66,.12); }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; right:24px; background:linear-gradient(135deg,var(--acento),var(--acento2)); color:white; padding:11px 20px; border-radius:9px; font-size:.88rem; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,.2); z-index:999; transform:translateY(70px); opacity:0; transition:all .32s cubic-bezier(.34,1.56,.64,1); }
+.toast.visivel { transform:translateY(0); opacity:1; }
+
+@media (max-width:700px) {
+  .grade { gap:2px; }
+  .dia { min-height:70px; padding:5px; }
+  .num-dia { font-size:1.2rem; }
+  .icone-dia { font-size:1rem; }
+  .painel-corpo { flex-direction:column; max-height:none; }
+  .painel-form { width:100%; min-width:unset; border-left:none; border-top:2px solid var(--borda); }
+  .painel-eventos { overflow-x:auto; }
+  .painel-num-grande { font-size:2.2rem; }
+  header h1 { font-size:1rem; }
+  .nav-periodo h2 { font-size:1.2rem; }
+  .lista-num { min-width:42px; font-size:1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📅 Calendário Escolar 2026</h1>
+
+  </div>
+  <div class="header-right">
+    <div class="toggle-view">
+      <button id="btn-mensal" class="ativo" onclick="setVista('mensal')">📆 Mensal</button>
+      <button id="btn-semanal" onclick="setVista('semanal')">📋 Semanal</button>
+    </div>
+    <div class="tema-wrap">
+      <span>Tema:</span>
+      <div class="tema-btn ativo" data-t="claro"  title="Claro"     onclick="setTema('claro')"></div>
+      <div class="tema-btn"       data-t="escuro" title="Escuro"    onclick="setTema('escuro')"></div>
+      <div class="tema-btn"       data-t="azul"   title="Azul Royal" onclick="setTema('azul')"></div>
+      <div class="tema-btn"       data-t="rosa"   title="Rosa"      onclick="setTema('rosa')"></div>
+    </div>
+    <div class="online-badge">
+      <div class="dot-live"></div>
+      Transmissão em tempo real
+    </div>
+  </div>
+</header>
+
+<div class="nav-periodo">
+  <button onclick="navAnterior()">‹</button>
+  <h2 id="titulo-periodo"></h2>
+  <button onclick="navProximo()">›</button>
+</div>
+
+<div class="cal-wrap">
+  <!-- ── VISTA MENSAL ── -->
+  <div id="view-mensal">
+    <!-- Painel do dia -->
+    <div class="painel-acima" id="painel-dia">
+      <div class="painel-topo">
+        <div class="painel-topo-esq">
+          <div class="painel-num-grande" id="painel-num"></div>
+          <div class="painel-info-dia">
+            <h2 id="painel-nome-dia"></h2>
+            <span id="painel-data-completa"></span>
+          </div>
+        </div>
+        <button class="btn-fechar-painel" onclick="fecharPainel()">✕ Fechar</button>
+      </div>
+      <div class="painel-corpo">
+        <div class="painel-eventos">
+          <div class="painel-eventos-titulo">📋 <span id="painel-titulo-lista">Programação do dia</span></div>
+          <div class="grid-eventos" id="grid-eventos"></div>
+        </div>
+        <div class="painel-form">
+          <h3>➕ Novo evento</h3>
+          <div class="form-grupo">
+            <label>Conteúdo / Evento</label>
+            <input type="text" id="campo-desc" placeholder="Ex: Prova de Matemática…" maxlength="80">
+          </div>
+          <div class="form-grupo">
+            <label>Horário (opcional)</label>
+            <input type="time" id="campo-hora">
+          </div>
+          <div class="form-grupo">
+            <label>Professor / Responsável</label>
+            <input type="text" id="campo-prof" placeholder="Seu nome" maxlength="40">
+          </div>
+          <div class="form-grupo">
+            <label>Cor do evento</label>
+            <div class="cores-picker" id="cores-picker"></div>
+          </div>
+          <button class="btn-add" onclick="adicionarEvento()">+ Lançar no Calendário</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grade -->
+    <div class="dias-semana">
+      <div>Dom</div><div>Seg</div><div>Ter</div>
+      <div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+    </div>
+    <div class="grade" id="grade-mensal"></div>
+
+    <!-- Lista diária abaixo do calendário -->
+    <div class="lista-mensal" id="lista-mensal">
+      <div class="lista-mensal-titulo">📅 Programação de <span id="lista-mes-titulo"></span></div>
+      <div id="lista-dias"></div>
+    </div>
+
+    <!-- Calendário de Pagamento SEDUC 2026 -->
+    <div class="seduc-wrap">
+      <div class="seduc-header">
+        <h3>SEDUC 2026</h3>
+        <p>Calendário de Pagamento</p>
+      </div>
+      <table class="seduc-table">
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th>💰 Grupos I e II</th>
+            <th>🔵 Grupo III</th>
+          </tr>
+        </thead>
+        <tbody id="seduc-tbody">
+        </tbody>
+      </table>
+      <div class="seduc-legenda">
+        <span class="seduc-legenda-item">🏫 Grupo I: SEDUC Interior</span>
+        <span class="seduc-legenda-item">🏙️ Grupo II: SEDUC Capital</span>
+        <span class="seduc-legenda-item">📋 Grupo III: AmazonPrev &amp; Pensionistas</span>
+      </div>
+    </div>
+
+    <!-- ══ ATIVIDADES BIMESTRAIS ══ -->
+    <div class="bim-section" id="bim-atividades">
+      <div class="bim-header">
+        <h3>📚 ATIVIDADES BIMESTRAIS</h3>
+        <p>Calendário Letivo 2026</p>
+      </div>
+      <table class="bim-table">
+        <thead>
+          <tr>
+            <th>Bimestre</th>
+            <th>📅 Período</th>
+            <th>📆 Dias Letivos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="bim-row-1"><td>1º Bimestre</td><td><span class="bim-periodo">05/02 → 23/04/2026</span></td><td><span class="bim-dias">50</span></td></tr>
+          <tr id="bim-row-2"><td>2º Bimestre</td><td><span class="bim-periodo">24/04 → 07/07/2026</span></td><td><span class="bim-dias">50</span></td></tr>
+          <tr id="bim-row-3"><td>3º Bimestre</td><td><span class="bim-periodo">16/07 → 24/09/2026</span></td><td><span class="bim-dias">50</span></td></tr>
+          <tr id="bim-row-4"><td>4º Bimestre</td><td><span class="bim-periodo">25/09 → 14/12/2026</span></td><td><span class="bim-dias">50</span></td></tr>
+        </tbody>
+      </table>
+      <div class="bim-legenda">
+        <span class="bim-legenda-item">📚 Total: 200 dias letivos</span>
+        <span class="bim-legenda-item">📆 4 bimestres × 50 dias</span>
+        <span class="bim-legenda-item">🏫 Calendário SEDUC 2026</span>
+      </div>
+    </div>
+
+    <!-- ══ DATA LIMITE PARA AVALIAÇÕES ══ -->
+    <div class="bim-section" id="bim-avaliacoes" style="margin-top:16px; margin-bottom:24px;">
+      <div class="bim-header">
+        <h3>📝 DATA LIMITE — AVALIAÇÕES</h3>
+        <p>Realização das Avaliações 2026</p>
+      </div>
+      <div style="overflow-x:auto; width:100%;">
+      <table class="bim-table" style="min-width:480px;">
+        <thead>
+          <tr>
+            <th>Bimestre</th>
+            <th>✏️ AV1</th>
+            <th>📋 AV2</th>
+            <th>🎯 AV3</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1º Bimestre</td><td><span class="av-badge av-av1">03/03/2026</span></td><td><span class="av-badge av-av2">24/03/2026</span></td><td><span class="av-badge av-av3">15/04/2026</span></td></tr>
+          <tr><td>2º Bimestre</td><td><span class="av-badge av-av1">18/05/2026</span></td><td><span class="av-badge av-av2">09/06/2026</span></td><td><span class="av-badge av-av3">30/06/2026</span></td></tr>
+          <tr><td>3º Bimestre</td><td><span class="av-badge av-av1">05/08/2026</span></td><td><span class="av-badge av-av2">26/08/2026</span></td><td><span class="av-badge av-av3">17/09/2026</span></td></tr>
+          <tr><td>4º Bimestre</td><td><span class="av-badge av-av1">20/10/2026</span></td><td><span class="av-badge av-av2">12/11/2026</span></td><td><span class="av-badge av-av3">04/12/2026</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="bim-legenda">
+        <span class="bim-legenda-item">✏️ AV1 — Primeira avaliação</span>
+        <span class="bim-legenda-item">📋 AV2 — Segunda avaliação</span>
+        <span class="bim-legenda-item">🎯 AV3 — Avaliação final do bimestre</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── VISTA SEMANAL ── -->
+  <div id="view-semanal" style="display:none">
+    <div class="grade-semana" id="grade-semanal"></div>
+  </div>
+</div>
+
+<div id="banner-firebase" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:999;
+  background:linear-gradient(135deg,#1a3080,#2244aa); color:white;
+  padding:14px 20px; align-items:center; gap:14px; flex-wrap:wrap;
+  box-shadow:0 -4px 24px rgba(0,0,0,.3); font-family:'DM Sans',sans-serif;">
+  <span style="font-size:1.3rem">🔧</span>
+  <div style="flex:1; min-width:200px;">
+    <div style="font-weight:800; font-size:.95rem;">Configure o Firebase para sincronização em tempo real</div>
+    <div style="font-size:.78rem; opacity:.85; margin-top:2px;">
+      Acesse <strong>console.firebase.google.com</strong>, crie um projeto com Realtime Database e cole as chaves no topo do código JavaScript (variável <code style="background:rgba(255,255,255,.15);padding:1px 5px;border-radius:4px;">FIREBASE_CONFIG</code>).
+    </div>
+  </div>
+  <button onclick="document.getElementById('banner-firebase').style.display='none'"
+    style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:white;
+    padding:7px 16px;border-radius:20px;cursor:pointer;font-weight:700;font-size:.8rem;white-space:nowrap;">
+    Entendido ✕
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   DADOS FIXOS
+════════════════════════════════════════ */
+const CORES_EV = [
+  {hex:'#2244aa',nome:'Azul Royal'}, {hex:'#1a6b3c',nome:'Verde'},
+  {hex:'#884ea0',nome:'Roxo'},       {hex:'#e86d2c',nome:'Laranja'},
+  {hex:'#c0392b',nome:'Vermelho'},   {hex:'#b7950b',nome:'Dourado'},
+  {hex:'#2e86c1',nome:'Azul claro'}, {hex:'#117a65',nome:'Verde água'},
+];
+
+// Feriados nacionais fixos do Brasil (MM-DD)
+const FERIADOS_NACIONAIS = {
+  '01-01':'Confraternização Universal',
+  '04-21':'Tiradentes',
+  '05-01':'Dia do Trabalhador',
+  '09-07':'Independência do Brasil',
+  '10-12':'Nossa Sra. Aparecida',
+  '11-02':'Finados',
+  '11-15':'Proclamação da República',
+  '11-20':'Consciência Negra',
+  '12-25':'Natal',
+  // Feriados móveis 2026
+  '02-16':'Carnaval',
+  '02-17':'Carnaval',
+  '04-03':'Sexta-feira Santa',
+  '04-05':'Páscoa',
+  '06-04':'Corpus Christi',
+};
+
+// Dias homenageados (MM-DD) — professores, educação, cultura
+const DIAS_HOMENAGEM = {
+  '01-08':'Dia do Educador',
+  '01-28':'Dia Internacional da Proteção de Dados',
+  '02-14':'Dia dos Namorados',
+  '02-21':'Dia Internacional da Língua Materna',
+  '03-08':'Dia Internacional da Mulher',
+  '03-14':'Dia do Matemático (Pi)',
+  '03-21':'Dia Mundial da Poesia / Dia Internacional das Florestas',
+  '03-22':'Dia Mundial da Água',
+  '04-07':'Dia Mundial da Saúde',
+  '04-18':'Dia do Livro Infantil',
+  '04-19':'Dia do Índio',
+  '04-22':'Descobrimento do Brasil',
+  '04-23':'Dia do Idioma / Dia de São Jorge',
+  '04-30':'Dia das Crianças na China / Dia do Trabalho Voluntário',
+  '05-05':'Dia Internacional da Língua Portuguesa',
+  '05-06':'Dia da Matemática',
+  '05-08':'Dia das Mães',
+  '05-13':'Dia da Abolição da Escravidão / Dia de Denúncia Contra o Racismo',
+  '05-15':'Dia do Professor / Dia das Famílias na Escola',
+  '05-18':'Dia Internacional dos Museus',
+  '05-20':'Dia do Pedagogo',
+  '05-31':'Dia Mundial sem Tabaco',
+  '06-01':'Dia Mundial da Criança',
+  '06-05':'Dia do Meio Ambiente',
+  '06-12':'Dia dos Namorados (BR)',
+  '06-13':'Dia do Historiador',
+  '07-02':'Dia da Independência da Bahia',
+  '08-11':'Dia do Advogado / Dia dos Estudantes',
+  '08-15':'Dia dos Pais',
+  '09-21':'Dia da Árvore / Primavera',
+  '10-05':'Dia Mundial dos Professores',
+  '10-08':'Dia do Professor (Brasil)',
+  '10-12':'Dia das Crianças',
+  '10-15':'Dia do Professor (comemoração escolar)',
+  '10-16':'Dia Mundial da Alimentação',
+  '11-19':'Dia da Bandeira',
+  '12-01':'Dia Mundial da AIDS',
+  '12-10':'Dia dos Direitos Humanos',
+};
+
+const ICONE_MAP = [
+  { keys:['pagamento','salário','salario'],           icon:'💰' },
+  { keys:['feriado'],                               icon:'🎌' },
+  { keys:['piscina'],                               icon:'🏊' },
+  { keys:['dentista'],                              icon:'🦷' },
+  { keys:['reunião','reuniao'],                     icon:'🤝' },
+  { keys:['palestra','bullying'],                   icon:'🎤' },
+  { keys:['matemática','matematica'],               icon:'📐' },
+  { keys:['vacin'],                                 icon:'💉' },
+  { keys:['mãe','mães','mae','família','familia'],  icon:'🌸' },
+  { keys:['show','talento'],                        icon:'🎭' },
+  { keys:['jea','abertura'],                        icon:'🏅' },
+  { keys:['pedagog'],                               icon:'📚' },
+  { keys:['planejamento','planeamento'],            icon:'📋' },
+  { keys:['língua','lingua','português','portugues'],icon:'📖' },
+  { keys:['conferência','conferencia','cartão','cartao'],icon:'📄' },
+  { keys:['formatura'],                             icon:'🎓' },
+  { keys:['limite','avs'],                          icon:'⏰' },
+  { keys:['racismo','denúncia','denuncia'],         icon:'✊' },
+  { keys:['inglesa','ingles'],                      icon:'🌍' },
+  { keys:['sadem'],                                 icon:'📝' },
+  { keys:['aula especial','especiai'],              icon:'⭐' },
+  { keys:['cgu'],                                   icon:'📢' },
+];
+
+function getIcone(desc){
+  const d=desc.toLowerCase();
+  for(const {keys,icon} of ICONE_MAP) if(keys.some(k=>d.includes(k))) return icon;
+  return '📌';
+}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+const EVENTOS_INICIAIS = {
+  '2026-04-29':[{id:uid(),desc:'RS — Atend. Dentista (tarde)',hora:'',prof:'',cor:'#1a6b3c'},{id:uid(),desc:'3ª/2ª Piscina',hora:'',prof:'',cor:'#2e86c1'}],
+  '2026-04-30':[{id:uid(),desc:'Reunião Escolar',hora:'',prof:'',cor:'#2244aa'}],
+  '2026-05-01':[{id:uid(),desc:'FERIADO NACIONAL — Dia do Trabalhador',hora:'',prof:'',cor:'#c0392b'}],
+  '2026-05-04':[{id:uid(),desc:'Manhã — "Tempo de Aula Especiais"',hora:'',prof:'',cor:'#e86d2c'},{id:uid(),desc:'Planejamento da Tarde',hora:'',prof:'',cor:'#2244aa'}],
+  '2026-05-05':[{id:uid(),desc:'Dia Int. da Língua Portuguesa',hora:'',prof:'',cor:'#884ea0'},{id:uid(),desc:'Evento: CGU',hora:'',prof:'',cor:'#1a6b3c'},{id:uid(),desc:'Formatura / Empresa',hora:'',prof:'',cor:'#b7950b'}],
+  '2026-05-06':[{id:uid(),desc:'Dia da Matemática',hora:'',prof:'',cor:'#b7950b'}],
+  '2026-05-07':[{id:uid(),desc:'Piscina 3°3',hora:'',prof:'',cor:'#2e86c1'}],
+  '2026-05-08':[{id:uid(),desc:'Dia das Mães (interno)',hora:'',prof:'',cor:'#884ea0'},{id:uid(),desc:'SADEM 8° Ano — Manhã → Sala Prof. Ray',hora:'',prof:'',cor:'#2244aa'}],
+  '2026-05-11':[{id:uid(),desc:'Palestra — Bullying e Cyberbullying → Polícia Militar',hora:'',prof:'',cor:'#c0392b'}],
+  '2026-05-13':[{id:uid(),desc:'Dia Nac. de Denúncia Contra o Racismo',hora:'',prof:'',cor:'#884ea0'},{id:uid(),desc:"Abertura dos JEA's — 8h",hora:'08:00',prof:'',cor:'#1a6b3c'}],
+  '2026-05-14':[{id:uid(),desc:'Conferência dos Cartões de Vacina dos Alunos',hora:'',prof:'',cor:'#2244aa'}],
+  '2026-05-15':[{id:uid(),desc:'Família na Escola (Dia das Mães)',hora:'',prof:'',cor:'#884ea0'}],
+  '2026-05-18':[{id:uid(),desc:'Limite AVS',hora:'',prof:'',cor:'#c0392b'}],
+  '2026-05-20':[{id:uid(),desc:'Dia do Pedagogo',hora:'',prof:'',cor:'#b7950b'}],
+  '2026-05-21':[{id:uid(),desc:'Vacinação na Escola — USF',hora:'',prof:'',cor:'#1a6b3c'}],
+  '2026-05-28':[{id:uid(),desc:'RS — Dentista (tarde)',hora:'',prof:'',cor:'#1a6b3c'}],
+  '2026-05-29':[{id:uid(),desc:'Show de Talentos — Língua Inglesa às 13h30',hora:'13:30',prof:'',cor:'#e86d2c'}],
+};
+
+/* ════════════════════════════════════════
+   FIREBASE — TEMPO REAL
+════════════════════════════════════════ */
+// 🔧 CONFIGURAÇÃO DO FIREBASE
+// Passos para configurar:
+//  1. Acesse https://console.firebase.google.com e crie um projeto (ex: "calendario-professores")
+//  2. No painel, clique em "Realtime Database" → "Criar banco de dados" → modo de teste
+//  3. Vá em "Configurações do projeto" → "Seus apps" → adicione app da Web (</>)
+//  4. Copie os valores do bloco firebaseConfig e cole abaixo substituindo os exemplos
+//  5. No Realtime Database, vá em "Regras" e publique:
+//     { "rules": { ".read": true, ".write": true } }  (para uso interno/escolar)
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyARnu43mXahFzziaYwpumCNunJGVP9bGUs",
+  authDomain:        "calendario-seduc.firebaseapp.com",
+  databaseURL:       "https://calendario-seduc-default-rtdb.firebaseio.com",
+  projectId:         "calendario-seduc",
+  storageBucket:     "calendario-seduc.firebasestorage.app",
+  messagingSenderId: "244299233261",
+  appId:             "1:244299233261:web:7fe076d08ad0e41e0199e4"
+};
+
+const FIREBASE_PRONTO = FIREBASE_CONFIG.databaseURL && !FIREBASE_CONFIG.databaseURL.includes('COLE_AQUI');
+
+let dbRef = null;
+let dadosSync = false; // true depois da 1ª leitura do Firebase
+
+// Carrega dados locais como fallback inicial
+const CHAVE_LOCAL = 'cal_escola_2026_v4';
+let dados = (()=>{ try{ const s=localStorage.getItem(CHAVE_LOCAL); if(s) return JSON.parse(s); }catch(e){} return JSON.parse(JSON.stringify(EVENTOS_INICIAIS)); })();
+
+function salvar(){
+  // Sempre persiste local como fallback
+  try{ localStorage.setItem(CHAVE_LOCAL, JSON.stringify(dados)); }catch(e){}
+  // Envia ao Firebase se configurado
+  if(FIREBASE_PRONTO && dbRef){
+    dbRef.set(dados).catch(err=>console.warn('Firebase write error:', err));
+  }
+}
+
+function iniciarFirebase(){
+  if(!FIREBASE_PRONTO){
+    mostrarBannerConfig();
+    return;
+  }
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    dbRef = db.ref('calendario/dados');
+
+    // Escuta mudanças em tempo real (de qualquer professor)
+    dbRef.on('value', snapshot => {
+      const remoto = snapshot.val();
+      if(remoto){
+        dados = remoto;
+        try{ localStorage.setItem(CHAVE_LOCAL, JSON.stringify(dados)); }catch(e){}
+      } else if(!dadosSync){
+        // Primeiro acesso: sobe os dados iniciais/locais para o Firebase
+        dbRef.set(dados).catch(()=>{});
+      }
+      dadosSync = true;
+      renderizar();
+      if(diaAberto) renderGridEventos(diaAberto);
+      atualizarIndicadorOnline(true);
+    }, err => {
+      console.warn('Firebase read error:', err);
+      atualizarIndicadorOnline(false);
+    });
+
+    // Detecta presença online
+    const connRef = db.ref('.info/connected');
+    connRef.on('value', snap => atualizarIndicadorOnline(snap.val()===true));
+
+  } catch(err){
+    console.warn('Firebase init error:', err);
+    mostrarBannerConfig();
+  }
+}
+
+function atualizarIndicadorOnline(online){
+  const dot = document.querySelector('.dot-live');
+  const txt = document.querySelector('.online-badge');
+  if(!dot||!txt) return;
+  if(online){
+    dot.style.background = '#4cde80';
+    txt.title = 'Conectado — sincronizando em tempo real';
+  } else {
+    dot.style.background = '#f5c842';
+    txt.title = 'Offline — alterações salvas localmente';
+  }
+}
+
+function mostrarBannerConfig(){
+  const banner = document.getElementById('banner-firebase');
+  if(banner) banner.style.display = 'flex';
+}
+
+const hoje=new Date();
+let mesAtual=hoje.getMonth();
+let anoAtual=hoje.getFullYear()<2026?2026:hoje.getFullYear();
+let vista='mensal';
+let semanaBase=inicioSemana(new Date(anoAtual,mesAtual,1));
+let diaAberto=null;
+let corSelecionada=CORES_EV[0].hex;
+
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_LONGOS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+const DIAS_CURTOS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function chave(ano,mes,dia){ return `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; }
+function mmdd(mes,dia){ return `${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; }
+function inicioSemana(d){ const r=new Date(d); r.setDate(r.getDate()-r.getDay()); r.setHours(0,0,0,0); return r; }
+
+function isFeriadoNac(mes,dia){ return !!FERIADOS_NACIONAIS[mmdd(mes,dia)]; }
+function isDiaHomenagem(mes,dia){ return !!DIAS_HOMENAGEM[mmdd(mes,dia)]; }
+function nomeFeriado(mes,dia){ return FERIADOS_NACIONAIS[mmdd(mes,dia)]||''; }
+function nomeHomenagem(mes,dia){ return DIAS_HOMENAGEM[mmdd(mes,dia)]||''; }
+
+// Pagamento SEDUC 2026 — Grupos I e II (dia do mês, 0=Jan … 11=Dez)
+const PAGAMENTOS_G12 = {0:29,1:26,2:30,3:29,4:28,5:29,6:30,7:28,8:29,9:29,10:27,11:28};
+function isDiaPagamento(mes,dia){ return PAGAMENTOS_G12[mes]===dia; }
+
+// Bimestres 2026 — datas de início e fim (mês 0-indexed)
+const BIMESTRES = [
+  {ini:[2026,1,5],  fim:[2026,3,23],  nome:'1º Bimestre'},
+  {ini:[2026,3,24], fim:[2026,6,7],   nome:'2º Bimestre'},
+  {ini:[2026,6,16], fim:[2026,8,24],  nome:'3º Bimestre'},
+  {ini:[2026,8,25], fim:[2026,11,14], nome:'4º Bimestre'},
+];
+// Avaliações — datas limite (mês 0-indexed)
+const AVALIACOES = [
+  {data:[2026,2,3],  label:'AV1 — 1º Bim'}, {data:[2026,2,24], label:'AV2 — 1º Bim'}, {data:[2026,3,15], label:'AV3 — 1º Bim'},
+  {data:[2026,4,18], label:'AV1 — 2º Bim'}, {data:[2026,5,9],  label:'AV2 — 2º Bim'}, {data:[2026,5,30], label:'AV3 — 2º Bim'},
+  {data:[2026,7,5],  label:'AV1 — 3º Bim'}, {data:[2026,7,26], label:'AV2 — 3º Bim'}, {data:[2026,8,17], label:'AV3 — 3º Bim'},
+  {data:[2026,9,20], label:'AV1 — 4º Bim'}, {data:[2026,10,12],label:'AV2 — 4º Bim'}, {data:[2026,11,4], label:'AV3 — 4º Bim'},
+];
+function isBimestreIniOrFim(ano,mes,dia){
+  for(const b of BIMESTRES){
+    if((b.ini[0]===ano&&b.ini[1]===mes&&b.ini[2]===dia)||(b.fim[0]===ano&&b.fim[1]===mes&&b.fim[2]===dia)) return b.nome;
+  }
+  return null;
+}
+function isAvaliacao(ano,mes,dia){
+  for(const a of AVALIACOES){
+    if(a.data[0]===ano&&a.data[1]===mes&&a.data[2]===dia) return a.label;
+  }
+  return null;
+}
+function bimestreAtual(ano,mes,dia){
+  const t=new Date(ano,mes,dia).getTime();
+  for(const b of BIMESTRES){
+    const ini=new Date(b.ini[0],b.ini[1],b.ini[2]).getTime();
+    const fim=new Date(b.fim[0],b.fim[1],b.fim[2]).getTime();
+    if(t>=ini&&t<=fim) return b.nome;
+  }
+  return null;
+}
+// Highlight bimestre rows in table
+(()=>{
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  for(let i=1;i<=4;i++){
+    const b=BIMESTRES[i-1];
+    const ini=new Date(b.ini[0],b.ini[1],b.ini[2]); ini.setHours(0,0,0,0);
+    const fim=new Date(b.fim[0],b.fim[1],b.fim[2]); fim.setHours(0,0,0,0);
+    if(hoje>=ini&&hoje<=fim){
+      const el=document.getElementById('bim-row-'+i);
+      if(el) el.classList.add('bim-current');
+    }
+  }
+})();
+
+/* ════════════════════════════════════════
+   TEMA
+════════════════════════════════════════ */
+function setTema(t){
+  document.documentElement.setAttribute('data-tema',t);
+  document.querySelectorAll('.tema-btn').forEach(b=>b.classList.toggle('ativo', b.dataset.t===t));
+  localStorage.setItem('tema_cal',t);
+}
+(()=>{ const t=localStorage.getItem('tema_cal'); if(t) setTema(t); })();
+
+/* ════════════════════════════════════════
+   NAVEGAÇÃO
+════════════════════════════════════════ */
+function setVista(v){
+  vista=v; fecharPainelSilencioso();
+  document.getElementById('view-mensal').style.display=v==='mensal'?'':'none';
+  document.getElementById('view-semanal').style.display=v==='semanal'?'':'none';
+  document.getElementById('btn-mensal').classList.toggle('ativo',v==='mensal');
+  document.getElementById('btn-semanal').classList.toggle('ativo',v==='semanal');
+  if(v==='semanal') semanaBase=inicioSemana(new Date(anoAtual,mesAtual,1));
+  renderizar();
+}
+function navAnterior(){
+  fecharPainelSilencioso();
+  if(vista==='mensal'){ mesAtual--; if(mesAtual<0){mesAtual=11;anoAtual--;} }
+  else { semanaBase=new Date(semanaBase); semanaBase.setDate(semanaBase.getDate()-7); }
+  renderizar();
+}
+function navProximo(){
+  fecharPainelSilencioso();
+  if(vista==='mensal'){ mesAtual++; if(mesAtual>11){mesAtual=0;anoAtual++;} }
+  else { semanaBase=new Date(semanaBase); semanaBase.setDate(semanaBase.getDate()+7); }
+  renderizar();
+}
+function renderizar(){ vista==='mensal'?renderMensal():renderSemanal(); }
+
+/* ════════════════════════════════════════
+   MENSAL — GRADE
+════════════════════════════════════════ */
+function renderMensal(){
+  document.getElementById('titulo-periodo').textContent=`${MESES[mesAtual]} ${anoAtual}`;
+  const grade=document.getElementById('grade-mensal');
+  grade.innerHTML='';
+
+  const primeiroDia=new Date(anoAtual,mesAtual,1).getDay();
+  const diasNoMes=new Date(anoAtual,mesAtual+1,0).getDate();
+  const hojeD=hoje.getDate(), hojeM=hoje.getMonth(), hojeA=hoje.getFullYear();
+
+  for(let i=0;i<primeiroDia;i++){
+    const v=document.createElement('div'); v.className='dia vazio'; grade.appendChild(v);
+  }
+
+  for(let d=1;d<=diasNoMes;d++){
+    const k=chave(anoAtual,mesAtual,d);
+    const evs=dados[k]||[];
+    const ds=new Date(anoAtual,mesAtual,d).getDay();
+    const isHoje=hojeD===d&&hojeM===mesAtual&&hojeA===anoAtual;
+    const isFds=ds===0||ds===6;
+    const isFerNac=isFeriadoNac(mesAtual,d);
+    const isHom=!isFerNac&&isDiaHomenagem(mesAtual,d);
+    const isPgto=isDiaPagamento(mesAtual,d);
+    const isSel=diaAberto===k;
+    const temEv=evs.length>0;
+    const isBimMarca=isBimestreIniOrFim(anoAtual,mesAtual,d);
+    const isAv=!isBimMarca&&isAvaliacao(anoAtual,mesAtual,d);
+
+    const cel=document.createElement('div');
+    let cls='dia';
+    if(isHoje)  cls+=' hoje';
+    if(isFds)   cls+=' fim-semana';
+    if(isFerNac)cls+=' feriado-nac';
+    if(isPgto && !isFerNac) cls+=' pagamento';
+    if(isBimMarca && !isFerNac && !isPgto) cls+=' bimestre';
+    if(isAv && !isFerNac && !isPgto) cls+=' avaliacao';
+    if(isSel)   cls+=' selecionado';
+    cel.className=cls;
+    cel.onclick=()=>abrirPainel(k,d);
+    if(isFerNac) cel.title=nomeFeriado(mesAtual,d);
+    if(isHom)    cel.title=nomeHomenagem(mesAtual,d);
+    if(isBimMarca) cel.title=isBimMarca;
+    if(isAv)     cel.title='📝 Data Limite — '+isAv;
+
+    const num=document.createElement('div'); num.className='num-dia'; num.textContent=d;
+    cel.appendChild(num);
+
+    if(temEv){
+      // Aplicar contorno colorido no card usando a cor do primeiro evento (ou mistura)
+      const cores=[...new Set(evs.map(e=>e.cor))];
+      if(cores.length===1){
+        cel.style.borderColor=cores[0];
+        cel.style.borderWidth='2.5px';
+        cel.style.boxShadow=`0 0 0 2px ${cores[0]}33`;
+      } else {
+        // múltiplas cores: usar gradiente como borda via outline trick
+        cel.style.borderColor=cores[0];
+        cel.style.borderWidth='2.5px';
+        cel.style.boxShadow=cores.slice(1).map((c,i)=>`0 0 0 ${(i+2)*2+1}px ${c}44`).join(',');
+      }
+      // Badge de contagem de eventos (canto superior direito, não sobrepõe o número)
+      const badge=document.createElement('div'); badge.className='badge-ev'; badge.textContent=evs.length; cel.appendChild(badge);
+      if(isPgto&&!isFerNac){ const pm=document.createElement('div'); pm.className='pagamento-hint'; pm.textContent='💰 Pgto.'; pm.style.fontSize='.65rem'; cel.appendChild(pm); }
+      else if(isBimMarca&&!isFerNac&&!isPgto){ const bm=document.createElement('div'); bm.className='bimestre-hint'; bm.textContent='📚 '+isBimMarca; cel.appendChild(bm); }
+      else if(isAv&&!isFerNac&&!isPgto){ const am=document.createElement('div'); am.className='avaliacao-hint'; am.textContent='📝 '+isAv; cel.appendChild(am); }
+    } else if(isFerNac){
+      const hint=document.createElement('div'); hint.className='add-hint'; hint.textContent=nomeFeriado(mesAtual,d).substring(0,20); hint.style.color='#c0392b'; hint.style.fontWeight='700'; hint.style.fontSize='.62rem';
+      cel.appendChild(hint);
+    } else if(isPgto){
+      const m1=document.createElement('div'); m1.style.fontSize='2rem'; m1.textContent='💰'; cel.appendChild(m1);
+      const pm=document.createElement('div'); pm.className='pagamento-hint'; pm.textContent='Pgto.'; cel.appendChild(pm);
+    } else if(isBimMarca){
+      const m1=document.createElement('div'); m1.style.fontSize='1.4rem'; m1.textContent='📚'; cel.appendChild(m1);
+      const bm=document.createElement('div'); bm.className='bimestre-hint'; bm.textContent=isBimMarca; cel.appendChild(bm);
+    } else if(isAv){
+      const m1=document.createElement('div'); m1.style.fontSize='1.4rem'; m1.textContent='📝'; cel.appendChild(m1);
+      const am=document.createElement('div'); am.className='avaliacao-hint'; am.textContent=isAv; cel.appendChild(am);
+    } else if(isHom){
+      const hint=document.createElement('div'); hint.className='add-hint'; hint.textContent=nomeHomenagem(mesAtual,d).substring(0,22); hint.style.color='#1a6b3c'; hint.style.fontWeight='700'; hint.style.fontSize='.62rem';
+      cel.appendChild(hint);
+    } else {
+      const hint=document.createElement('div'); hint.className='add-hint'; hint.textContent='+ adicionar';
+      cel.appendChild(hint);
+    }
+
+    grade.appendChild(cel);
+  }
+
+  renderListaMensal();
+}
+
+/* ════════════════════════════════════════
+   LISTA DIÁRIA ABAIXO DO CALENDÁRIO
+════════════════════════════════════════ */
+function renderListaMensal(){
+  document.getElementById('lista-mes-titulo').textContent=`${MESES[mesAtual]} ${anoAtual}`;
+  const cont=document.getElementById('lista-dias');
+  cont.innerHTML='';
+  const diasNoMes=new Date(anoAtual,mesAtual+1,0).getDate();
+  const hojeD=hoje.getDate(), hojeM=hoje.getMonth(), hojeA=hoje.getFullYear();
+
+  for(let d=1;d<=diasNoMes;d++){
+    const k=chave(anoAtual,mesAtual,d);
+    const evs=dados[k]||[];
+    const dataObj=new Date(anoAtual,mesAtual,d);
+    const ds=dataObj.getDay();
+    const isHoje=hojeD===d&&hojeM===mesAtual&&hojeA===anoAtual;
+    const isFerNac=isFeriadoNac(mesAtual,d);
+    const isHom=isDiaHomenagem(mesAtual,d);
+    const isPgto=isDiaPagamento(mesAtual,d);
+
+    const row=document.createElement('div');
+    row.className='lista-dia-row'+(isHoje?' lista-hoje':'');
+    row.onclick=()=>abrirPainel(k,d);
+
+    // Coluna do número
+    const numDiv=document.createElement('div'); numDiv.className='lista-num';
+    numDiv.innerHTML=`<span>${d}</span><span class="lista-diasem">${DIAS_CURTOS[ds]}</span>`;
+    row.appendChild(numDiv);
+
+    // Coluna do conteúdo
+    const cont2=document.createElement('div'); cont2.className='lista-conteudo';
+
+    // Badges de feriado/homenagem
+    const badgesRow=document.createElement('div'); badgesRow.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;';
+    if(isFerNac){
+      const b=document.createElement('span'); b.className='lista-badge feriado'; b.textContent='🔴 '+nomeFeriado(mesAtual,d); badgesRow.appendChild(b);
+    }
+    if(isPgto){
+      const b=document.createElement('span'); b.className='lista-badge pagamento'; b.textContent='💰 Pagamento — Grupos I e II'; badgesRow.appendChild(b);
+    }
+    if(badgesRow.children.length) cont2.appendChild(badgesRow);
+
+    // Eventos agendados
+    if(evs.length){
+      evs.forEach(ev=>{
+        const item=document.createElement('div'); item.className='lista-ev-item';
+        const dot=document.createElement('span'); dot.className='ev-dot'; dot.style.background=ev.cor;
+        const txt=document.createElement('span'); txt.textContent=(ev.hora?ev.hora+' — ':'')+getIcone(ev.desc)+' '+ev.desc;
+        item.appendChild(dot); item.appendChild(txt);
+        cont2.appendChild(item);
+      });
+    } else if(!isFerNac&&!isHom){
+      const vz=document.createElement('div'); vz.className='lista-vazio'; vz.textContent='Sem eventos agendados';
+      cont2.appendChild(vz);
+    }
+
+    row.appendChild(cont2);
+    cont.appendChild(row);
+  }
+
+  // Rola até hoje automaticamente
+  if(hoje.getMonth()===mesAtual && hoje.getFullYear()===anoAtual){
+    setTimeout(()=>{
+      const rows=cont.querySelectorAll('.lista-hoje');
+      if(rows.length) rows[0].scrollIntoView({behavior:'smooth',block:'nearest'});
+    },200);
+  }
+}
+
+/* ════════════════════════════════════════
+   SEMANAL
+════════════════════════════════════════ */
+function renderSemanal(){
+  const dom=new Date(semanaBase);
+  const sab=new Date(dom); sab.setDate(dom.getDate()+6);
+  const f=d=>d.toLocaleDateString('pt-BR',{day:'numeric',month:'short'});
+  document.getElementById('titulo-periodo').textContent=`${f(dom)} – ${f(sab)} de ${dom.getFullYear()}`;
+  const grade=document.getElementById('grade-semanal'); grade.innerHTML='';
+  const hojeMs=new Date(); hojeMs.setHours(0,0,0,0);
+
+  for(let i=0;i<7;i++){
+    const data=new Date(dom); data.setDate(dom.getDate()+i);
+    const k=chave(data.getFullYear(),data.getMonth(),data.getDate());
+    const evs=dados[k]||[];
+    const ds=data.getDay();
+    const isHoje=data.getTime()===hojeMs.getTime();
+    const isFds=ds===0||ds===6;
+    const isFerNac=isFeriadoNac(data.getMonth(),data.getDate());
+    const isPgtoSem=isDiaPagamento(data.getMonth(),data.getDate());
+
+    const col=document.createElement('div');
+    col.className='dia-sem-col'+(isHoje?' hoje-sem':'')+(isFerNac?' feriado-sem':'')+(isFds?' fim-sem':'')+(isPgtoSem&&!isFerNac?' pagamento-sem':'');
+    col.onclick=()=>abrirPainel(k,data.getDate());
+
+    const hdr=document.createElement('div'); hdr.className='sem-hdr';
+    const nome=document.createElement('div'); nome.className='sem-nome'; nome.textContent=DIAS_CURTOS[ds];
+    const num=document.createElement('div'); num.className='sem-num'; num.textContent=data.getDate();
+    hdr.appendChild(nome); hdr.appendChild(num); col.appendChild(hdr);
+
+    const evsCont=document.createElement('div'); evsCont.className='sem-evs';
+    if(isFerNac){ const chip=document.createElement('div'); chip.style.cssText='font-size:.78rem;font-weight:700;padding:5px 8px;border-radius:6px;background:#c0392b22;color:#c0392b;border-left:4px solid #c0392b'; chip.textContent='🔴 '+nomeFeriado(data.getMonth(),data.getDate()); evsCont.appendChild(chip); }
+    if(isPgtoSem&&!isFerNac){ const chip=document.createElement('div'); chip.style.cssText='font-size:.78rem;font-weight:800;padding:5px 8px;border-radius:6px;background:#f5c84233;color:#9a6f00;border-left:4px solid #c8960c'; chip.textContent='💰 Pagamento — Grupos I e II'; evsCont.appendChild(chip); }
+    evs.forEach(ev=>{
+      const chip=document.createElement('div'); chip.className='sem-chip';
+      chip.style.background=ev.cor+'22'; chip.style.color=ev.cor; chip.style.borderLeft=`4px solid ${ev.cor}`;
+      const inner=document.createElement('span');
+      inner.innerHTML=getIcone(ev.desc)+' '+ev.desc+(ev.hora?`<span class="sem-hora">⏰ ${ev.hora}</span>`:'')+( ev.prof?`<span class="sem-hora">👤 ${ev.prof}</span>`:'');
+      chip.appendChild(inner);
+      const del=document.createElement('button'); del.className='del-btn'; del.textContent='×';
+      del.onclick=(e)=>{e.stopPropagation();removerEvento(k,ev.id);};
+      chip.appendChild(del); evsCont.appendChild(chip);
+    });
+    col.appendChild(evsCont);
+    const addQ=document.createElement('div'); addQ.className='sem-add'; addQ.textContent='+ adicionar';
+    evsCont.appendChild(addQ);
+    grade.appendChild(col);
+  }
+}
+
+/* ════════════════════════════════════════
+   PAINEL DO DIA
+════════════════════════════════════════ */
+function abrirPainel(k,d){
+  if(diaAberto===k){ fecharPainel(); return; }
+  diaAberto=k;
+
+  const [ano,mes,dia]=k.split('-').map(Number);
+  const dataObj=new Date(ano,mes-1,dia);
+  const nomeDia=DIAS_LONGOS[dataObj.getDay()];
+  const dataCompleta=dataObj.toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('painel-num').textContent=d;
+  document.getElementById('painel-nome-dia').textContent=nomeDia;
+  document.getElementById('painel-data-completa').textContent=dataCompleta;
+  document.getElementById('painel-titulo-lista').textContent=`Programação de ${nomeDia}, ${d}`;
+  document.getElementById('campo-desc').value='';
+  document.getElementById('campo-hora').value='';
+  document.getElementById('campo-prof').value='';
+
+  const picker=document.getElementById('cores-picker'); picker.innerHTML='';
+  CORES_EV.forEach(c=>{
+    const div=document.createElement('div');
+    div.className='cor-opcao'+(c.hex===corSelecionada?' selecionada':'');
+    div.style.background=c.hex; div.title=c.nome;
+    div.onclick=()=>{ corSelecionada=c.hex; document.querySelectorAll('.cor-opcao').forEach(el=>el.classList.remove('selecionada')); div.classList.add('selecionada'); };
+    picker.appendChild(div);
+  });
+
+  renderGridEventos(k);
+  document.getElementById('painel-dia').classList.add('aberto');
+  renderizar();
+
+  setTimeout(()=>{
+    document.getElementById('painel-dia').scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById('campo-desc').focus();
+  },80);
+}
+
+function fecharPainel(){ document.getElementById('painel-dia').classList.remove('aberto'); diaAberto=null; renderizar(); }
+function fecharPainelSilencioso(){ document.getElementById('painel-dia').classList.remove('aberto'); diaAberto=null; }
+
+/* ════════════════════════════════════════
+   CARDS DO PAINEL
+════════════════════════════════════════ */
+function renderGridEventos(k){
+  const grid=document.getElementById('grid-eventos');
+  const evs=dados[k]||[];
+  grid.innerHTML='';
+  if(!evs.length){
+    grid.innerHTML=`<div class="vazio-painel"><div class="icone">📭</div><p>Nenhum evento para este dia.<br>Use o formulário ao lado para adicionar.</p></div>`;
+    return;
+  }
+  evs.forEach(ev=>{
+    const card=document.createElement('div'); card.className='card-evento';
+    card.style.background=`linear-gradient(145deg, ${ev.cor}ee 0%, ${ev.cor}88 100%)`;
+    const topo=document.createElement('div'); topo.className='card-topo';
+    const icone=document.createElement('div'); icone.className='card-icone'; icone.textContent=getIcone(ev.desc);
+    const titulo=document.createElement('div'); titulo.className='card-titulo'; titulo.textContent=ev.desc;
+    topo.appendChild(icone); topo.appendChild(titulo);
+    const rodape=document.createElement('div'); rodape.className='card-rodape';
+    if(ev.hora) rodape.innerHTML+=`<span class="card-meta-item">⏰ ${ev.hora}</span>`;
+    if(ev.prof) rodape.innerHTML+=`<span class="card-meta-item">👤 ${ev.prof}</span>`;
+    if(!ev.hora&&!ev.prof) rodape.innerHTML=`<span class="card-meta-item" style="opacity:.6">Dia todo</span>`;
+    const del=document.createElement('button'); del.className='card-del'; del.textContent='✕'; del.title='Remover';
+    del.onclick=()=>removerEvento(k,ev.id);
+    card.appendChild(topo); card.appendChild(rodape); card.appendChild(del);
+    grid.appendChild(card);
+  });
+}
+
+/* ════════════════════════════════════════
+   CRUD
+════════════════════════════════════════ */
+function adicionarEvento(){
+  const descEl=document.getElementById('campo-desc');
+  const desc=descEl.value.trim();
+  if(!desc){ descEl.focus(); descEl.style.borderColor='#c0392b'; setTimeout(()=>descEl.style.borderColor='',1200); return; }
+  const hora=document.getElementById('campo-hora').value;
+  const prof=document.getElementById('campo-prof').value.trim();
+  const k=diaAberto;
+  if(!dados[k]) dados[k]=[];
+  dados[k].push({id:uid(),desc,hora,prof,cor:corSelecionada});
+  salvar(); renderGridEventos(k); renderizar();
+  descEl.value=''; document.getElementById('campo-hora').value='';
+  mostrarToast('✅ Evento adicionado!');
+}
+
+function removerEvento(k,id){
+  if(!dados[k]) return;
+  dados[k]=dados[k].filter(e=>e.id!==id);
+  if(!dados[k].length) delete dados[k];
+  salvar();
+  if(diaAberto===k) renderGridEventos(k);
+  renderizar();
+  mostrarToast('🗑 Evento removido.');
+}
+
+let toastTimer;
+function mostrarToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('visivel');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visivel'),2400);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&diaAberto) fecharPainel();
+  if(e.key==='Enter'&&diaAberto&&document.activeElement?.id!=='campo-prof') adicionarEvento();
+});
+
+// Monta tabela SEDUC
+(()=>{
+  const PAGAMENTOS_G3 = {0:30,1:27,2:31,3:30,4:29,5:30,6:31,7:31,8:30,9:30,10:30,11:29};
+  const MESES_SEDUC = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const tbody = document.getElementById('seduc-tbody');
+  const mesHoje = new Date().getMonth();
+  MESES_SEDUC.forEach((m,i)=>{
+    const tr = document.createElement('tr');
+    if(i===mesHoje) tr.className='mes-atual-seduc';
+    tr.innerHTML=`
+      <td>${m}</td>
+      <td class="seduc-g12"><span class="seduc-dia-badge">${PAGAMENTOS_G12[i]}</span></td>
+      <td class="seduc-g3"><span class="seduc-dia-badge">${PAGAMENTOS_G3[i]}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+})();
+
+renderizar();
+iniciarFirebase();
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Calendario-D-Seduc/sw.js')
+      .then(() => console.log('SW registrado ✅'))
+      .catch(err => console.warn('SW erro:', err));
+  });
+}
+</script>
+
+<!-- ══ RODAPÉ ALFA STORE ══ -->
+<div id="rodape-alfastore" style="
+  width:100%; background:transparent;
+  padding:14px 20px; display:flex; align-items:center; justify-content:center;
+  flex-wrap:wrap; gap:12px; font-family:'DM Sans',sans-serif; margin-top:8px;
+  border-top:1px solid var(--borda);">
+  <div style="text-align:center; color:var(--texto-leve);">
+    <div style="font-size:.82rem; font-weight:600; letter-spacing:.5px;">
+      Desenvolvido por Alfa Store — Soluções e Tecnologia
+    </div>
+    <div style="margin-top:4px;">
+      <a href="https://wa.me/5592994810508" target="_blank" rel="noopener" style="
+        color:var(--acento); font-size:.78rem; font-weight:700; text-decoration:none;
+        display:inline-flex; align-items:center; gap:4px; transition:opacity .2s;
+      " onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+        <span style="font-size:1rem;">💬</span> Suporte (92 99481 0508)
+      </a>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════════════
+   PAINEL ADMINISTRATIVO OCULTO
+══════════════════════════════════════════ -->
+<!-- Trigger invisível no canto inferior esquerdo -->
+<div id="admin-trigger" style="
+  position:fixed; bottom:0; left:0; width:40px; height:40px; 
+  z-index:9999; cursor:pointer; opacity:0; transition:opacity .2s;
+" ondblclick="abrirPainelAdmin()" title="Área Administrativa"></div>
+
+<!-- Modal do Painel Administrativo -->
+<div id="modal-admin" style="
+  display:none; position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,.7); align-items:center; justify-content:center;
+" onclick="if(event.target===this)fecharPainelAdmin()">
+  <div style="
+    background:var(--card); border:2px solid var(--acento); border-radius:16px;
+    padding:28px; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.4);
+    animation:slideDown .3s cubic-bezier(.22,1,.36,1);
+  ">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+      <h3 style="font-family:'Fraunces',serif; font-size:1.3rem; color:var(--acento); margin:0;">🔐 Perfil do Proprietário</h3>
+      <button onclick="fecharPainelAdmin()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--texto-leve);">✕</button>
+    </div>
+
+    <!-- Senha -->
+    <div id="admin-senha-section">
+      <p style="color:var(--texto-leve); font-size:.9rem; margin-bottom:12px;">Digite a palavra-chave para acessar:</p>
+      <input type="password" id="admin-senha" placeholder="Palavra-chave" style="
+        width:100%; padding:12px; border:2px solid var(--borda); border-radius:10px;
+        font-family:'DM Sans',sans-serif; font-size:1rem; background:var(--bg); color:var(--texto);
+        outline:none; margin-bottom:12px;
+      " onkeydown="if(event.key==='Enter')verificarSenhaAdmin()">
+      <button onclick="verificarSenhaAdmin()" style="
+        width:100%; padding:12px; background:linear-gradient(135deg,var(--acento),var(--acento2));
+        color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif;
+        font-size:.95rem; font-weight:700; cursor:pointer;
+      ">Entrar</button>
+      <p id="admin-erro" style="color:#c0392b; font-size:.85rem; margin-top:10px; display:none;">❌ Palavra-chave incorreta!</p>
+    </div>
+
+    <!-- Conteúdo do painel (oculto até digitar senha) -->
+    <div id="admin-conteudo" style="display:none;">
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--texto-leve); margin-bottom:6px;">Título do Calendário</label>
+        <input type="text" id="admin-titulo" value="Calendário Escolar 2026" style="
+          width:100%; padding:10px; border:2px solid var(--borda); border-radius:8px;
+          font-family:'DM Sans',sans-serif; font-size:.95rem; background:var(--bg); color:var(--texto);
+          outline:none;
+        ">
+        <button onclick="salvarTituloAdmin()" style="
+          margin-top:8px; padding:8px 16px; background:var(--acento); color:white;
+          border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.85rem;
+          font-weight:700; cursor:pointer;
+        ">💾 Salvar Título</button>
+      </div>
+
+      <!-- ══ SEDUC 2026 - Calendário de Pagamento ══ -->
+      <div style="border-top:2px solid var(--borda); padding-top:20px; margin-bottom:20px;">
+        <h4 style="font-family:'Fraunces',serif; color:#3d6b28; margin:0 0 12px; font-size:1.05rem;">💰 SEDUC 2026 — Calendário de Pagamento</h4>
+        <p style="color:var(--texto-leve); font-size:.8rem; margin-bottom:10px;">Edite os dias de pagamento para cada mês:</p>
+        <div id="admin-seduc-editor" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+          <!-- Gerado via JS -->
+        </div>
+        <button onclick="salvarSeducAdmin()" style="
+          padding:8px 16px; background:#3d6b28; color:white; border:none; border-radius:8px;
+          font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; cursor-pointer;
+        ">💾 Salvar Pagamentos</button>
+      </div>
+
+      <!-- ══ Atividades Bimestrais ══ -->
+      <div style="border-top:2px solid var(--borda); padding-top:20px; margin-bottom:20px;">
+        <h4 style="font-family:'Fraunces',serif; color:#1a6b3c; margin:0 0 12px; font-size:1.05rem;">📚 Atividades Bimestrais</h4>
+        <p style="color:var(--texto-leve); font-size:.8rem; margin-bottom:10px;">Edite os períodos e dias letivos:</p>
+        <div id="admin-bim-editor" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
+          <!-- Gerado via JS -->
+        </div>
+        <button onclick="salvarBimestresAdmin()" style="
+          padding:8px 16px; background:#1a6b3c; color:white; border:none; border-radius:8px;
+          font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer;
+        ">💾 Salvar Bimestres</button>
+      </div>
+
+      <!-- ══ Datas Limite — Avaliações ══ -->
+      <div style="border-top:2px solid var(--borda); padding-top:20px; margin-bottom:20px;">
+        <h4 style="font-family:'Fraunces',serif; color:#1a6b3c; margin:0 0 12px; font-size:1.05rem;">📝 Datas Limite — Avaliações</h4>
+        <p style="color:var(--texto-leve); font-size:.8rem; margin-bottom:10px;">Edite as datas de AV1, AV2 e AV3:</p>
+        <div id="admin-av-editor" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
+          <!-- Gerado via JS -->
+        </div>
+        <button onclick="salvarAvaliacoesAdmin()" style="
+          padding:8px 16px; background:#1a6b3c; color:white; border:none; border-radius:8px;
+          font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:700; cursor:pointer;
+        ">💾 Salvar Avaliações</button>
+      </div>
+
+      <div style="border-top:2px solid var(--borda); padding-top:20px;">
+        <h4 style="font-family:'Fraunces',serif; color:#c0392b; margin:0 0 12px; font-size:1.05rem;">🔒 Bloqueio do Aplicativo</h4>
+        <p style="color:var(--texto-leve); font-size:.85rem; line-height:1.5; margin-bottom:16px;">
+          Renove a sua assinatura e volte a usar o aplicativo, fale com o suporte.
+        </p>
+        <button id="btn-bloquear" onclick="toggleBloqueio()" style="
+          width:100%; padding:12px; background:linear-gradient(135deg,#c0392b,#e74c3c);
+          color:white; border:none; border-radius:10px; font-family:'DM Sans',sans-serif;
+          font-size:.95rem; font-weight:700; cursor:pointer; display:flex;
+          align-items:center; justify-content:center; gap:8px;
+        ">
+          <span>🔒</span> Bloquear Aplicativo
+        </button>
+        <p style="color:var(--texto-leve); font-size:.75rem; margin-top:10px; text-align:center;">
+          Precisa de ajuda? <a href="https://wa.me/5592994810508" target="_blank" style="color:var(--acento); font-weight:700;">💬 Suporte (92 99481 0508)</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de Bloqueio (overlay quando app está bloqueado) -->
+<div id="tela-bloqueio" style="
+  display:none; position:fixed; inset:0; z-index:99999;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:20px;">
+  <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
+  <h2 style="font-family:'Fraunces',serif; color:white; font-size:1.8rem; margin-bottom:12px; text-shadow:0 2px 10px rgba(0,0,0,.3);">Aplicativo Bloqueado</h2>
+  <p style="color:rgba(255,255,255,.7); font-size:1rem; max-width:320px; line-height:1.6; margin-bottom:24px;">
+    O acesso ao calendário foi temporariamente suspenso.<br>
+    Entre em contato com o suporte para renovar sua assinatura.
+  </p>
+  <a href="https://wa.me/5592994810508" target="_blank" style="
+    display:inline-flex; align-items:center; gap:8px; background:#25D366;
+    color:white; padding:14px 28px; border-radius:30px; text-decoration:none;
+    font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700;
+    box-shadow:0 4px 20px rgba(37,211,102,.3); transition:transform .2s;
+  " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    <span style="font-size:1.3rem;">💬</span> Falar no WhatsApp
+  </a>
+  <p style="color:rgba(255,255,255,.5); font-size:.85rem; margin-top:16px;">92 99481 0508</p>
+
+  <!-- Botão oculto para desbloquear (apenas admin) -->
+  <div style="position:fixed; bottom:0; left:0; width:50px; height:50px; cursor:pointer; opacity:0;" ondblclick="pedirSenhaDesbloqueio()"></div>
+</div>
+
+<!-- Modal para desbloquear -->
+<div id="modal-desbloqueio" style="
+  display:none; position:fixed; inset:0; z-index:100001;
+  background:rgba(0,0,0,.8); align-items:center; justify-content:center;">
+  <div style="
+    background:var(--card); border:2px solid var(--acento); border-radius:16px;
+    padding:24px; max-width:320px; width:90%;
+  ">
+    <h3 style="font-family:'Fraunces',serif; color:var(--acento); margin:0 0 16px;">🔓 Desbloquear</h3>
+    <input type="password" id="senha-desbloqueio" placeholder="Palavra-chave" style="
+      width:100%; padding:10px; border:2px solid var(--borda); border-radius:8px;
+      font-family:'DM Sans',sans-serif; font-size:.9rem; background:var(--bg); color:var(--texto);
+      outline:none; margin-bottom:12px;
+    " onkeydown="if(event.key==='Enter')verificarSenhaDesbloqueio()">
+    <button onclick="verificarSenhaDesbloqueio()" style="
+      width:100%; padding:10px; background:var(--acento); color:white; border:none;
+      border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.9rem;
+      font-weight:700; cursor:pointer;
+    ">Desbloquear</button>
+    <p id="erro-desbloqueio" style="color:#c0392b; font-size:.8rem; margin-top:8px; display:none;">❌ Palavra-chave incorreta!</p>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   PAINEL ADMINISTRATIVO
+════════════════════════════════════════ */
+const SENHA_ADMIN = 'Atlanta';
+let appBloqueado = false;
+
+function abrirPainelAdmin() {
+  document.getElementById('modal-admin').style.display = 'flex';
+  document.getElementById('admin-senha').value = '';
+  document.getElementById('admin-erro').style.display = 'none';
+  document.getElementById('admin-conteudo').style.display = 'none';
+  document.getElementById('admin-senha-section').style.display = 'block';
+  setTimeout(() => document.getElementById('admin-senha').focus(), 100);
+}
+
+function fecharPainelAdmin() {
+  document.getElementById('modal-admin').style.display = 'none';
+}
+
+function verificarSenhaAdmin() {
+  const senha = document.getElementById('admin-senha').value.trim();
+  if (senha === SENHA_ADMIN) {
+    document.getElementById('admin-senha-section').style.display = 'none';
+    document.getElementById('admin-conteudo').style.display = 'block';
+    document.getElementById('admin-erro').style.display = 'none';
+    // Carregar estado do bloqueio
+    const bloqueado = localStorage.getItem('app_bloqueado') === 'true';
+    appBloqueado = bloqueado;
+    atualizarBotaoBloqueio();
+    // Renderizar editores
+    renderAdminEditors();
+  } else {
+    document.getElementById('admin-erro').style.display = 'block';
+    document.getElementById('admin-senha').value = '';
+    document.getElementById('admin-senha').focus();
+  }
+}
+
+function salvarTituloAdmin() {
+  const novoTitulo = document.getElementById('admin-titulo').value.trim();
+  if (novoTitulo) {
+    document.querySelector('header h1').innerHTML = '📅 ' + novoTitulo;
+    localStorage.setItem('cal_titulo', novoTitulo);
+    mostrarToast('✅ Título atualizado com sucesso!');
+  }
+}
+
+function toggleBloqueio() {
+  appBloqueado = !appBloqueado;
+  localStorage.setItem('app_bloqueado', appBloqueado);
+  atualizarBotaoBloqueio();
+  if (appBloqueado) {
+    mostrarTelaBloqueio();
+    mostrarToast('🔒 Aplicativo bloqueado!');
+  } else {
+    esconderTelaBloqueio();
+    mostrarToast('🔓 Aplicativo desbloqueado!');
+  }
+}
+
+function atualizarBotaoBloqueio() {
+  const btn = document.getElementById('btn-bloquear');
+  if (appBloqueado) {
+    btn.innerHTML = '<span>🔓</span> Desbloquear Aplicativo';
+    btn.style.background = 'linear-gradient(135deg,#1a6b3c,#2db34a)';
+  } else {
+    btn.innerHTML = '<span>🔒</span> Bloquear Aplicativo';
+    btn.style.background = 'linear-gradient(135deg,#c0392b,#e74c3c)';
+  }
+}
+
+function mostrarTelaBloqueio() {
+  document.getElementById('tela-bloqueio').style.display = 'flex';
+}
+
+function esconderTelaBloqueio() {
+  document.getElementById('tela-bloqueio').style.display = 'none';
+}
+
+function pedirSenhaDesbloqueio() {
+  document.getElementById('modal-desbloqueio').style.display = 'flex';
+  document.getElementById('senha-desbloqueio').value = '';
+  document.getElementById('erro-desbloqueio').style.display = 'none';
+  setTimeout(() => document.getElementById('senha-desbloqueio').focus(), 100);
+}
+
+function verificarSenhaDesbloqueio() {
+  const senha = document.getElementById('senha-desbloqueio').value.trim();
+  if (senha === SENHA_ADMIN) {
+    appBloqueado = false;
+    localStorage.setItem('app_bloqueado', 'false');
+    esconderTelaBloqueio();
+    document.getElementById('modal-desbloqueio').style.display = 'none';
+    mostrarToast('🔓 Aplicativo desbloqueado!');
+    // Atualizar botão no painel se estiver aberto
+    atualizarBotaoBloqueio();
+  } else {
+    document.getElementById('erro-desbloqueio').style.display = 'block';
+    document.getElementById('senha-desbloqueio').value = '';
+    document.getElementById('senha-desbloqueio').focus();
+  }
+}
+
+// Dados editáveis (carregados do localStorage ou padrão)
+let adminSeducData = JSON.parse(localStorage.getItem('admin_seduc')) || {
+  g12: {0:29,1:26,2:30,3:29,4:28,5:29,6:30,7:28,8:29,9:29,10:27,11:28},
+  g3: {0:30,1:27,2:31,3:30,4:29,5:30,6:31,7:31,8:30,9:30,10:30,11:29}
+};
+let adminBimData = JSON.parse(localStorage.getItem('admin_bimestres')) || [
+  {nome:'1º Bimestre', ini:'05/02/2026', fim:'23/04/2026', dias:50},
+  {nome:'2º Bimestre', ini:'24/04/2026', fim:'07/07/2026', dias:50},
+  {nome:'3º Bimestre', ini:'16/07/2026', fim:'24/09/2026', dias:50},
+  {nome:'4º Bimestre', ini:'25/09/2026', fim:'14/12/2026', dias:50}
+];
+let adminAvData = JSON.parse(localStorage.getItem('admin_avaliacoes')) || [
+  {bim:'1º Bimestre', av1:'03/03/2026', av2:'24/03/2026', av3:'15/04/2026'},
+  {bim:'2º Bimestre', av1:'18/05/2026', av2:'09/06/2026', av3:'30/06/2026'},
+  {bim:'3º Bimestre', av1:'05/08/2026', av2:'26/08/2026', av3:'17/09/2026'},
+  {bim:'4º Bimestre', av1:'20/10/2026', av2:'12/11/2026', av3:'04/12/2026'}
+];
+
+function renderAdminEditors() {
+  // SEDUC Editor
+  const seducEditor = document.getElementById('admin-seduc-editor');
+  if (seducEditor) {
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let html = '<div style="font-weight:700;font-size:.75rem;color:var(--texto-leve)">Mês</div>';
+    html += '<div style="font-weight:700;font-size:.75rem;color:var(--texto-leve)">Grupos I/II</div>';
+    html += '<div style="font-weight:700;font-size:.75rem;color:var(--texto-leve)">Grupo III</div>';
+    meses.forEach((m,i) => {
+      html += `<div style="font-size:.85rem;padding:4px 0">${m}</div>`;
+      html += `<input type="number" id="seduc-g12-${i}" value="${adminSeducData.g12[i]}" style="width:100%;padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.85rem;background:var(--bg);color:var(--texto);text-align:center;">`;
+      html += `<input type="number" id="seduc-g3-${i}" value="${adminSeducData.g3[i]}" style="width:100%;padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.85rem;background:var(--bg);color:var(--texto);text-align:center;">`;
+    });
+    seducEditor.innerHTML = html;
+  }
+
+  // Bimestres Editor
+  const bimEditor = document.getElementById('admin-bim-editor');
+  if (bimEditor) {
+    bimEditor.innerHTML = adminBimData.map((b,i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:center;">
+        <input type="text" id="bim-nome-${i}" value="${b.nome}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="text" id="bim-ini-${i}" value="${b.ini}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="text" id="bim-fim-${i}" value="${b.fim}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="number" id="bim-dias-${i}" value="${b.dias}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);text-align:center;">
+      </div>
+    `).join('');
+  }
+
+  // Avaliações Editor
+  const avEditor = document.getElementById('admin-av-editor');
+  if (avEditor) {
+    avEditor.innerHTML = adminAvData.map((a,i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:center;">
+        <input type="text" id="av-bim-${i}" value="${a.bim}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="text" id="av-av1-${i}" value="${a.av1}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="text" id="av-av2-${i}" value="${a.av2}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+        <input type="text" id="av-av3-${i}" value="${a.av3}" style="padding:6px;border:1.5px solid var(--borda);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--texto);">
+      </div>
+    `).join('');
+  }
+}
+
+function salvarSeducAdmin() {
+  for (let i = 0; i < 12; i++) {
+    adminSeducData.g12[i] = parseInt(document.getElementById(`seduc-g12-${i}`).value) || 1;
+    adminSeducData.g3[i] = parseInt(document.getElementById(`seduc-g3-${i}`).value) || 1;
+  }
+  localStorage.setItem('admin_seduc', JSON.stringify(adminSeducData));
+  atualizarTabelaSeduc();
+  mostrarToast('✅ Calendário SEDUC atualizado!');
+}
+
+function salvarBimestresAdmin() {
+  for (let i = 0; i < 4; i++) {
+    adminBimData[i].nome = document.getElementById(`bim-nome-${i}`).value;
+    adminBimData[i].ini = document.getElementById(`bim-ini-${i}`).value;
+    adminBimData[i].fim = document.getElementById(`bim-fim-${i}`).value;
+    adminBimData[i].dias = parseInt(document.getElementById(`bim-dias-${i}`).value) || 50;
+  }
+  localStorage.setItem('admin_bimestres', JSON.stringify(adminBimData));
+  atualizarTabelaBimestres();
+  mostrarToast('✅ Atividades bimestrais atualizadas!');
+}
+
+function salvarAvaliacoesAdmin() {
+  for (let i = 0; i < 4; i++) {
+    adminAvData[i].bim = document.getElementById(`av-bim-${i}`).value;
+    adminAvData[i].av1 = document.getElementById(`av-av1-${i}`).value;
+    adminAvData[i].av2 = document.getElementById(`av-av2-${i}`).value;
+    adminAvData[i].av3 = document.getElementById(`av-av3-${i}`).value;
+  }
+  localStorage.setItem('admin_avaliacoes', JSON.stringify(adminAvData));
+  atualizarTabelaAvaliacoes();
+  mostrarToast('✅ Datas de avaliação atualizadas!');
+}
+
+function atualizarTabelaSeduc() {
+  const tbody = document.getElementById('seduc-tbody');
+  if (!tbody) return;
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const mesHoje = new Date().getMonth();
+  tbody.innerHTML = '';
+  meses.forEach((m,i) => {
+    const tr = document.createElement('tr');
+    if (i === mesHoje) tr.className = 'mes-atual-seduc';
+    tr.innerHTML = `
+      <td>${m}</td>
+      <td class="seduc-g12"><span class="seduc-dia-badge">${adminSeducData.g12[i]}</span></td>
+      <td class="seduc-g3"><span class="seduc-dia-badge">${adminSeducData.g3[i]}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function atualizarTabelaBimestres() {
+  const rows = document.querySelectorAll('#bim-atividades tbody tr');
+  rows.forEach((row,i) => {
+    if (adminBimData[i]) {
+      row.innerHTML = `
+        <td>${adminBimData[i].nome}</td>
+        <td><span class="bim-periodo">${adminBimData[i].ini} → ${adminBimData[i].fim}</span></td>
+        <td><span class="bim-dias">${adminBimData[i].dias}</span></td>
+      `;
+    }
+  });
+}
+
+function atualizarTabelaAvaliacoes() {
+  const rows = document.querySelectorAll('#bim-avaliacoes tbody tr');
+  rows.forEach((row,i) => {
+    if (adminAvData[i]) {
+      row.innerHTML = `
+        <td>${adminAvData[i].bim}</td>
+        <td><span class="av-badge av-av1">${adminAvData[i].av1}</span></td>
+        <td><span class="av-badge av-av2">${adminAvData[i].av2}</span></td>
+        <td><span class="av-badge av-av3">${adminAvData[i].av3}</span></td>
+      `;
+    }
+  });
+}
+
+// Override original functions to use admin data
+const originalRenderMensal = renderMensal;
+renderMensal = function() {
+  // Update PAGAMENTOS_G12 from admin data
+  if (adminSeducData && adminSeducData.g12) {
+    Object.assign(PAGAMENTOS_G12, adminSeducData.g12);
+  }
+  originalRenderMensal();
+};
+
+// Verificar bloqueio ao carregar
+(function() {
+  const bloqueado = localStorage.getItem('app_bloqueado') === 'true';
+  const tituloSalvo = localStorage.getItem('cal_titulo');
+  if (bloqueado) {
+    appBloqueado = true;
+    mostrarTelaBloqueio();
+  }
+  if (tituloSalvo) {
+    document.querySelector('header h1').innerHTML = '📅 ' + tituloSalvo;
+  }
+  // Load admin data into tables
+  atualizarTabelaSeduc();
+  atualizarTabelaBimestres();
+  atualizarTabelaAvaliacoes();
+})();
+</script>
+</body>
+</html>
