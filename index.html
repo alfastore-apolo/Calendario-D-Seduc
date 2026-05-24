@@ -1655,11 +1655,13 @@ function abrirPainelAdmin() {
   document.getElementById('admin-erro').style.display = 'none';
   document.getElementById('admin-conteudo').style.display = 'none';
   document.getElementById('admin-senha-section').style.display = 'block';
+  document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('admin-senha').focus(), 100);
 }
 
 function fecharPainelAdmin() {
   document.getElementById('modal-admin').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 async function verificarSenhaAdmin() {
