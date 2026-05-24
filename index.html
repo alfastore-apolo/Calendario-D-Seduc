@@ -206,6 +206,9 @@ header .sub { font-size:.72rem; opacity:.75; margin-top:1px; }
 .grid-eventos { display:flex; flex-direction:row; gap:14px; align-items:stretch; flex:1; overflow-x:auto; padding-bottom:6px; }
 .grid-eventos::-webkit-scrollbar { height:5px; }
 .grid-eventos::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
+#modal-admin > div::-webkit-scrollbar { width:6px; }
+#modal-admin > div::-webkit-scrollbar-track { background:var(--borda); border-radius:3px; }
+#modal-admin > div::-webkit-scrollbar-thumb { background:var(--acento); border-radius:3px; }
 
 .card-evento { border-radius:14px; display:flex; flex-direction:column; min-width:200px; max-width:240px; flex-shrink:0; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.13); transition:box-shadow .2s, transform .15s; position:relative; }
 .card-evento:hover { box-shadow:0 10px 30px rgba(0,0,0,.2); transform:translateY(-5px); }
@@ -1492,6 +1495,7 @@ if ('serviceWorker' in navigator) {
     animation:slideDown .3s cubic-bezier(.22,1,.36,1);
     max-height:90vh; overflow-y:scroll; -webkit-overflow-scrolling:touch;
     overscroll-behavior:contain; touch-action:pan-y;
+    scrollbar-width:thin; scrollbar-color:var(--acento) var(--borda);
   " onclick="event.stopPropagation()">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
       <h3 style="font-family:'Fraunces',serif; font-size:1.3rem; color:var(--acento); margin:0;">🔐 Perfil do Proprietário</h3>
