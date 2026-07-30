@@ -1038,6 +1038,7 @@ const FIREBASE_CONFIG = {
 const FIREBASE_PRONTO = FIREBASE_CONFIG.databaseURL && !FIREBASE_CONFIG.databaseURL.includes('COLE_AQUI');
 
 let dbRef = null;
+let bloqueioRef = null;
 let dadosSync = false; // true depois da 1ª leitura do Firebase
 
 // Carrega dados locais como fallback inicial
@@ -1085,6 +1086,16 @@ function iniciarFirebase(){
     // Detecta presença online
     const connRef = db.ref('.info/connected');
     connRef.on('value', snap => atualizarIndicadorOnline(snap.val()===true));
+
+    // Bloqueio compartilhado — sincroniza em tempo real para TODOS os clientes
+    bloqueioRef = db.ref('calendario/bloqueio');
+    bloqueioRef.on('value', snapshot => {
+      const remoto = snapshot.val() === true;
+      appBloqueado = remoto;
+      try{ localStorage.setItem('app_bloqueado', remoto); }catch(e){}
+      if (remoto) { mostrarTelaBloqueio(); } else { esconderTelaBloqueio(); }
+      atualizarBotaoBloqueio();
+    }, err => console.warn('Firebase bloqueio read error:', err));
 
   } catch(err){
     console.warn('Firebase init error:', err);
@@ -1868,13 +1879,16 @@ function salvarTituloAdmin() {
 function toggleBloqueio() {
   appBloqueado = !appBloqueado;
   localStorage.setItem('app_bloqueado', appBloqueado);
+  if (FIREBASE_PRONTO && bloqueioRef) {
+    bloqueioRef.set(appBloqueado).catch(err => console.warn('Firebase bloqueio write error:', err));
+  }
   atualizarBotaoBloqueio();
   if (appBloqueado) {
     mostrarTelaBloqueio();
-    mostrarToast('🔒 Aplicativo bloqueado!');
+    mostrarToast('🔒 Aplicativo bloqueado para todos os clientes!');
   } else {
     esconderTelaBloqueio();
-    mostrarToast('🔓 Aplicativo desbloqueado!');
+    mostrarToast('🔓 Aplicativo desbloqueado para todos os clientes!');
   }
 }
 
@@ -1910,6 +1924,9 @@ async function verificarSenhaDesbloqueio() {
   if (senhaCorreta) {
     appBloqueado = false;
     localStorage.setItem('app_bloqueado', 'false');
+    if (FIREBASE_PRONTO && bloqueioRef) {
+      bloqueioRef.set(false).catch(err => console.warn('Firebase bloqueio write error:', err));
+    }
     esconderTelaBloqueio();
     document.getElementById('modal-desbloqueio').style.display = 'none';
     mostrarToast('🔓 Aplicativo desbloqueado!');
