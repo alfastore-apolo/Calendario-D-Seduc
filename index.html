@@ -568,6 +568,115 @@ header .sub { font-size:.72rem; opacity:.75; margin-top:1px; }
   .nav-periodo h2 { font-size:1.2rem; }
   .lista-num { min-width:42px; font-size:1rem; }
 }
+
+/* ── CADEADINHO DISCRETO (acesso admin) ── */
+#admin-trigger {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  z-index: 9999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--texto-leve);
+  opacity: .25;
+  transition: opacity .25s ease, transform .15s ease;
+}
+#admin-trigger svg { width: 15px; height: 15px; }
+#admin-trigger:hover { opacity: .7; transform: scale(1.12); }
+#admin-trigger:active { transform: scale(.9); }
+@media (hover:none) {
+  #admin-trigger { opacity: .3; }
+}
+
+/* ══════════════════════════════════════════
+   TELA DE BLOQUEIO PROFISSIONAL (independente do tema)
+══════════════════════════════════════════ */
+#tela-bloqueio {
+  --lb-bg-0: #0B0E14;
+  --lb-bg-1: #141926;
+  --lb-card: #1A2033;
+  --lb-line: #2A3145;
+  --lb-text-hi: #F3F1EA;
+  --lb-text-mid: #A9B0C2;
+  --lb-text-low: #6A7488;
+  --lb-amber: #E8A23D;
+  --lb-whatsapp: #25D366;
+  font-family: 'DM Sans', sans-serif;
+  background: radial-gradient(circle at 50% 0%, var(--lb-bg-1) 0%, var(--lb-bg-0) 65%) !important;
+}
+#tela-bloqueio .lb-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--lb-card);
+  border: 1px solid var(--lb-line);
+  border-radius: 20px;
+  padding: 40px 30px 30px;
+  text-align: center;
+  box-shadow: 0 30px 70px -20px rgba(0,0,0,0.6);
+}
+#tela-bloqueio .lb-lock-wrap { position:relative; width:96px; height:96px; margin:0 auto 22px; }
+#tela-bloqueio .lb-lock-ring {
+  position:absolute; inset:0; border-radius:50%;
+  background: radial-gradient(circle, rgba(232,162,61,0.18) 0%, rgba(232,162,61,0) 70%);
+  animation: lb-pulse-ring 2.6s ease-in-out infinite;
+}
+@keyframes lb-pulse-ring { 0%,100%{transform:scale(0.9); opacity:.6;} 50%{transform:scale(1.15); opacity:1;} }
+#tela-bloqueio svg.lb-lock { position:relative; width:96px; height:96px; overflow:visible; }
+#tela-bloqueio .lb-lock-shackle {
+  fill:none; stroke:var(--lb-amber); stroke-width:5; stroke-linecap:round;
+  stroke-dasharray:96; stroke-dashoffset:96;
+  animation: lb-draw-shackle 1s cubic-bezier(.65,0,.35,1) .2s forwards;
+}
+@keyframes lb-draw-shackle { to{ stroke-dashoffset:0; } }
+#tela-bloqueio .lb-lock-body { fill:var(--lb-amber); opacity:0; transform:translateY(4px); animation: lb-rise .5s ease-out .9s forwards; }
+#tela-bloqueio .lb-lock-keyhole { fill:var(--lb-bg-0); opacity:0; animation: lb-rise .5s ease-out 1.15s forwards; }
+@keyframes lb-rise { to{ opacity:1; transform:translateY(0); } }
+#tela-bloqueio .lb-eyebrow {
+  display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--lb-amber);
+  background:rgba(232,162,61,.1); border:1px solid rgba(232,162,61,.28);
+  padding:6px 13px; border-radius:100px; margin-bottom:18px;
+}
+#tela-bloqueio .lb-eyebrow .lb-dot { width:6px; height:6px; border-radius:50%; background:var(--lb-amber); animation: lb-blink 1.6s ease-in-out infinite; }
+@keyframes lb-blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+#tela-bloqueio h2.lb-title { font-family:'Fraunces',serif; font-weight:900; font-size:1.5rem; line-height:1.25; color:var(--lb-text-hi); margin-bottom:12px; text-shadow:none; }
+#tela-bloqueio p.lb-desc { font-size:.92rem; line-height:1.6; color:var(--lb-text-mid); margin-bottom:22px; max-width:none; }
+#tela-bloqueio p.lb-desc strong { color:var(--lb-text-hi); font-weight:700; }
+#tela-bloqueio .lb-divider { height:1px; background:var(--lb-line); margin:0 0 22px; }
+#tela-bloqueio .lb-cta {
+  display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+  background:var(--lb-whatsapp); color:#06210F; font-family:'DM Sans',sans-serif; font-weight:700;
+  font-size:.95rem; padding:14px 18px; border-radius:12px; text-decoration:none; border:none; cursor:pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  box-shadow: 0 10px 24px -8px rgba(37,211,102,.45);
+}
+#tela-bloqueio .lb-cta:hover { transform:translateY(-2px); box-shadow:0 14px 30px -8px rgba(37,211,102,.6); background:#2ee374; }
+#tela-bloqueio .lb-cta svg { width:19px; height:19px; flex-shrink:0; }
+#tela-bloqueio .lb-contact { margin-top:13px; font-size:.8rem; color:var(--lb-text-low); }
+#tela-bloqueio .lb-contact span { color:var(--lb-text-mid); font-weight:600; }
+#tela-bloqueio .lb-footnote { margin-top:20px; font-size:.72rem; color:var(--lb-text-low); line-height:1.5; }
+#admin-unlock-trigger {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  z-index: 100000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.22);
+  transition: color .25s ease, transform .15s ease;
+}
+#admin-unlock-trigger svg { width: 15px; height: 15px; }
+#admin-unlock-trigger:hover { color: rgba(255,255,255,.6); transform: scale(1.12); }
+#admin-unlock-trigger:active { transform: scale(.9); }
 </style>
 </head>
 <body>
@@ -1489,11 +1598,13 @@ if ('serviceWorker' in navigator) {
 <!-- ══════════════════════════════════════════
    PAINEL ADMINISTRATIVO OCULTO
 ══════════════════════════════════════════ -->
-<!-- Trigger invisível no canto inferior esquerdo -->
-<div id="admin-trigger" style="
-  position:fixed; bottom:0; left:0; width:40px; height:40px; 
-  z-index:9999; cursor:pointer; opacity:0; transition:opacity .2s;
-" ondblclick="abrirPainelAdmin()" title="Área Administrativa"></div>
+<!-- Cadeadinho discreto no canto inferior esquerdo -->
+<div id="admin-trigger" ondblclick="abrirPainelAdmin()" title="Área Administrativa">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6.5 10V7.8A5.5 5.5 0 0 1 17.5 7.8V10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+    <rect x="4.5" y="10" width="15" height="10.5" rx="2.8" fill="currentColor"/>
+  </svg>
+</div>
 
 <!-- Modal do Painel Administrativo -->
 <div id="modal-admin" style="
@@ -1629,28 +1740,46 @@ if ('serviceWorker' in navigator) {
 
 <!-- Tela de Bloqueio (overlay quando app está bloqueado) -->
 <div id="tela-bloqueio" style="
-  display:none; position:fixed; inset:0; z-index:99999;
-  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
-  flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:20px;">
-  <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-  <h2 style="font-family:'Fraunces',serif; color:white; font-size:1.8rem; margin-bottom:12px; text-shadow:0 2px 10px rgba(0,0,0,.3);">Aplicativo Bloqueado</h2>
-  <p style="color:rgba(255,255,255,.7); font-size:1rem; max-width:320px; line-height:1.6; margin-bottom:24px;">
-    O acesso ao calendário foi temporariamente suspenso.<br>
-    Entre em contato com o suporte para renovar sua assinatura.
-  </p>
-  <a href="https://wa.me/5592994810508" target="_blank" style="
-    display:inline-flex; align-items:center; gap:8px; background:#25D366;
-    color:white; padding:14px 28px; border-radius:30px; text-decoration:none;
-    font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700;
-    box-shadow:0 4px 20px rgba(37,211,102,.3); transition:transform .2s;
-  " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-    <span style="font-size:1.3rem;">💬</span> Falar no WhatsApp
-  </a>
-  <p style="color:rgba(255,255,255,.5); font-size:.85rem; margin-top:16px;">92 99481 0508</p>
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  position:fixed; inset:0; z-index:99999; padding:20px;">
 
-  <!-- Botão oculto para desbloquear (apenas admin) -->
-  <div style="position:fixed; bottom:0; left:0; width:50px; height:50px; cursor:pointer; opacity:0;" ondblclick="pedirSenhaDesbloqueio()"></div>
+  <main class="lb-card">
+    <div class="lb-lock-wrap">
+      <div class="lb-lock-ring"></div>
+      <svg class="lb-lock" viewBox="0 0 108 108" fill="none">
+        <path class="lb-lock-shackle" d="M38 48 V36 C38 24 47 16 54 16 C61 16 70 24 70 36 V48" />
+        <rect class="lb-lock-body" x="28" y="46" width="52" height="42" rx="10" />
+        <path class="lb-lock-keyhole" d="M54 60 a6 6 0 1 1 -3.2 11.1 L48 82 h12 l-2.8 -10.9 A6 6 0 0 1 54 60 Z" />
+      </svg>
+    </div>
+
+    <div class="lb-eyebrow"><span class="lb-dot"></span>Acesso temporariamente bloqueado</div>
+
+    <h2 class="lb-title">Sua assinatura mensal venceu</h2>
+
+    <p class="lb-desc">
+      Para continuar usando o calendário sem interrupções, é necessário <strong>renovar sua assinatura</strong>. Fale com o suporte agora mesmo pelo WhatsApp e liberamos seu acesso rapidamente.
+    </p>
+
+    <div class="lb-divider"></div>
+
+    <a class="lb-cta" href="https://wa.me/5592994810508?text=Ol%C3%A1%2C%20minha%20assinatura%20venceu%20e%20preciso%20renov%C3%A1-la%20para%20voltar%20a%20usar%20o%20aplicativo." target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.29-1.39a9.9 9.9 0 0 0 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.8a8.1 8.1 0 0 1 5.76 2.39 8.08 8.08 0 0 1 2.38 5.73c0 4.48-3.65 8.12-8.15 8.12a8.1 8.1 0 0 1-4.13-1.13l-.3-.17-3.14.82.84-3.06-.19-.32a8.06 8.06 0 0 1-1.24-4.31c0-4.48 3.65-8.12 8.13-8.12M8.5 6.85c-.17 0-.44.06-.67.31s-.88.86-.88 2.09.9 2.42 1.03 2.59c.13.17 1.76 2.83 4.38 3.85 2.17.85 2.61.68 3.08.64.47-.04 1.53-.62 1.75-1.22.22-.6.22-1.11.15-1.22-.06-.11-.24-.17-.5-.3-.26-.13-1.53-.75-1.77-.84-.24-.09-.41-.13-.59.13-.17.26-.68.84-.83 1.01-.15.17-.31.19-.57.06-.26-.13-1.1-.4-2.09-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.31.39-.47.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.59-1.44-.82-1.96-.21-.51-.43-.44-.59-.45z"/></svg>
+      Falar com o suporte no WhatsApp
+    </a>
+
+    <p class="lb-contact">Ou chame diretamente: <span>(92) 99481-0508</span></p>
+
+    <p class="lb-footnote">O acesso será liberado automaticamente assim que a renovação for confirmada.</p>
+  </main>
+
+  <!-- Cadeadinho discreto para o admin desbloquear -->
+  <div id="admin-unlock-trigger" ondblclick="pedirSenhaDesbloqueio()" title="Área Administrativa">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.5 10V7.8A5.5 5.5 0 0 1 17.5 7.8V10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+      <rect x="4.5" y="10" width="15" height="10.5" rx="2.8" fill="currentColor"/>
+    </svg>
+  </div>
 </div>
 
 <!-- Modal para desbloquear -->
